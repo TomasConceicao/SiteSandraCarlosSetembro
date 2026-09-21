@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="pt-PT" dir="ltr">
+  <head>
+    <!-- Script de compatibilidade: assegura que window.fetch e globalThis.fetch são graváveis para bibliotecas polifill -->
+    <script>
+      (function() {
+        try {
+          if (typeof window !== 'undefined' && window.fetch) {
+            var nativeFetch = window.fetch;
+            var currentFetch = nativeFetch;
+            try {
+              // Testa se a atribuição direta a window.fetch causa erro (getter-only)
+              var descriptor = Object.getOwnPropertyDescriptor(window, 'fetch') ||
+                               Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window), 'fetch');
+              if (!descriptor || !descriptor.writable || !descriptor.set) {
+                Object.defineProperty(window, 'fetch', {
+                  configurable: true,
+                  enumerable: true,
+                  get: function() { return currentFetch; },
+                  set: function(fn) { currentFetch = fn; }
+                });
+              }
+            } catch (e) {
+              // Fallback silencioso
+            }
+          }
+        } catch (_) {}
+      })();
+    </script>
+    <!-- ===================================================================
+         1. META TAGS TÉCNICOS BÁSICOS
+         =================================================================== -->
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#36210f" />
+
+    <!-- Título Principal da Página -->
+    <title>Consultoria Imobiliária em Portugal | Sandra Carlos</title>
+
+    <!-- Meta Descrição para Motores de Busca (SEO) -->
+    <meta
+      name="description"
+      content="Comprar ou vender casa em Portugal com rigor, dedicação e acompanhamento de excelência. Conheça as melhores oportunidades e marque a sua visita."
+    />
+    <meta name="author" content="Sandra Carlos Consultoria Imobiliária" />
+
+    <!-- Diretivas para Motores de Busca (Robots) -->
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+
+    <!-- ===================================================================
+         2. URL CANÓNICA (PLACEHOLDER)
+         Substituir "https://SEU-DOMINIO-AQUI/" pelo domínio final (ex: https://sandracarlos.pt/)
+         =================================================================== -->
+    <link rel="canonical" href="https://SEU-DOMINIO-AQUI/" />
+
+    <!-- ===================================================================
+         3. FAVICONS E ÍCONES DE APLICAÇÃO
+         =================================================================== -->
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+
+    <!-- ===================================================================
+         4. OPEN GRAPH METATAGS (Facebook, WhatsApp, LinkedIn)
+         Otimização de partilha em redes sociais com imagem de destaque
+         =================================================================== -->
+    <meta property="og:locale" content="pt_PT" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Sandra Carlos Consultoria Imobiliária" />
+    <meta property="og:title" content="Consultoria Imobiliária em Portugal | Sandra Carlos" />
+    <meta
+      property="og:description"
+      content="Comprar ou vender casa em Portugal com rigor, dedicação e acompanhamento de excelência. Conheça as melhores oportunidades e marque a sua visita."
+    />
+    <meta property="og:url" content="https://SEU-DOMINIO-AQUI/" />
+    <meta property="og:image" content="https://SEU-DOMINIO-AQUI/sandra-carlos-consultora-imobiliaria-pombal.webp" />
+    <meta property="og:image:secure_url" content="https://SEU-DOMINIO-AQUI/sandra-carlos-consultora-imobiliaria-pombal.webp" />
+    <meta property="og:image:type" content="image/webp" />
+    <meta property="og:image:width" content="832" />
+    <meta property="og:image:height" content="1248" />
+    <meta property="og:image:alt" content="Sandra Carlos - Consultoria Imobiliária em Portugal" />
+
+    <!-- ===================================================================
+         5. TWITTER CARDS
+         Formato de cartão largo para partilha no Twitter / X
+         =================================================================== -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Consultoria Imobiliária em Portugal | Sandra Carlos" />
+    <meta
+      name="twitter:description"
+      content="Comprar ou vender casa em Portugal com rigor, dedicação e acompanhamento de excelência. Conheça as melhores oportunidades e marque a sua visita."
+    />
+    <meta name="twitter:image" content="https://SEU-DOMINIO-AQUI/sandra-carlos-consultora-imobiliaria-pombal.webp" />
+    <meta name="twitter:image:alt" content="Sandra Carlos - Consultora Imobiliária em Pombal e Portugal" />
+
+    <!-- ===================================================================
+         6. PRÉ-CONEXÕES E FONTES TIPOGRÁFICAS (Google Fonts)
+         Conexão antecipada aos servidores de fontes para carregamento rápido
+         Fontes: Bodoni Moda, Cinzel, Cormorant Garamond, Plus Jakarta Sans
+         =================================================================== -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- ===================================================================
+         7. DADOS ESTRUTURADOS SCHEMA.ORG (JSON-LD)
+         Declaração semântica da entidade RealEstateAgent para o Google
+         =================================================================== -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "RealEstateAgent",
+        "name": "Sandra Carlos Consultoria Imobiliária",
+        "image": "https://SEU-DOMINIO-AQUI/sandra-carlos-consultora-imobiliaria-pombal.webp",
+        "logo": "https://SEU-DOMINIO-AQUI/logo-sandra-carlos-consultoria-imobiliaria.webp",
+        "url": "https://SEU-DOMINIO-AQUI/",
+        "telephone": "+351965881547",
+        "email": "sandra.carlos@expertimo.eu",
+        "priceRange": "€€€",
+        "description": "Consultora imobiliária no concelho de Pombal com mais de 11 anos de experiência. Licença AMI 15766.",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Pombal",
+          "addressRegion": "Leiria",
+          "postalCode": "3100",
+          "addressCountry": "PT"
+        },
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": 39.9167,
+          "longitude": -8.6289
+        },
+        "areaServed": [
+          {
+            "@type": "AdministrativeArea",
+            "name": "Pombal"
+          },
+          {
+            "@type": "AdministrativeArea",
+            "name": "Leiria"
+          }
+        ],
+        "memberOf": {
+          "@type": "Organization",
+          "name": "Expertimo Portugal"
+        },
+        "sameAs": [
+          "https://instagram.com/sandracarlosimobiliaria"
+        ]
+      }
+    </script>
+  </head>
+
+  <!-- ===================================================================
+       8. CORPO DO DOCUMENTO E MONTAGEM DA APLICAÇÃO REACT
+       Fundo principal no tom off-white quente (#faf8f5) e tipografia neutra
+       =================================================================== -->
+  <body class="bg-[#faf8f5] text-[#1c1917] antialiased selection:bg-[#36210f] selection:text-white">
+    <!-- 
+      No-Script Fallback para acessibilidade e rastreadores sem JavaScript (SEO crawlability).
+      Fornece a estrutura semântica completa e exata da página inicial.
+    -->
+    <noscript>
+      <header class="p-6 bg-[#36210f] text-white">
+        <p class="text-xs uppercase tracking-widest text-[#d8be9e]">Sandra Carlos Consultoria Imobiliária</p>
+        <nav aria-label="Navegação básica">
+          <ul class="flex gap-6 mt-3 text-sm text-[#d8be9e]">
+            <li><a href="/" class="underline font-medium hover:text-white">Início</a></li>
+            <li><a href="/casas" class="underline font-medium hover:text-white">Imóveis</a></li>
+            <li><a href="/sobre" class="underline font-medium hover:text-white">Sobre Mim</a></li>
+            <li><a href="/dicas" class="underline font-medium hover:text-white">Blog / Dicas</a></li>
+            <li><a href="#contatos" class="underline font-medium hover:text-white">Contactos</a></li>
+          </ul>
+        </nav>
+      </header>
+
+      <main class="p-8 max-w-5xl mx-auto space-y-12">
+        <!-- <h1> Único Obrigatório -->
+        <section>
+          <span class="text-xs uppercase tracking-widest text-[#b87d1d] font-semibold">Consultoria Imobiliária Local • Portugal</span>
+          <h1 class="text-3xl sm:text-4xl font-serif text-[#36210f] mt-2 mb-4">
+            Consultoria Imobiliária em Portugal | Sandra Carlos
+          </h1>
+        </section>
+
+        <!-- Secção Sobre Mim resumida com <h2> -->
+        <section>
+          <h2 class="text-2xl font-serif text-[#36210f] mb-3">Sobre Mim • Compromisso, Rigor e Confiança</h2>
+          <p class="text-stone-700 leading-relaxed mb-4">
+            Com foco no concelho de Pombal e na região centro de Portugal, acompanho famílias e investidores com dedicação total na venda e compra de imóveis. Um percurso consolidado em mais de 11 anos de experiência, ética, rigor e proximidade.
+          </p>
+          <a href="/sobre" class="inline-block text-[#36210f] font-semibold underline">
+            Conhecer mais sobre Sandra Carlos &rarr;
+          </a>
+        </section>
+
+        <!-- Secção Imóveis em destaque com <h2> -->
+        <section>
+          <h2 class="text-2xl font-serif text-[#36210f] mb-4">Imóveis em destaque</h2>
+          <p class="text-stone-700 mb-4">Descubra a nossa seleção de moradias, apartamentos e quintas em Pombal e no distrito de Leiria.</p>
+          <ul class="space-y-3">
+            <li>
+              <a href="/casas?id=moradia-pombal-centro" class="underline text-[#36210f] font-medium">
+                Moradia Contemporânea com Jardim — Pombal Centro (T4 • 360 m²)
+              </a>
+            </li>
+            <li>
+              <a href="/casas?id=moradia-pombal-jardim" class="underline text-[#36210f] font-medium">
+                Quinta Histórica Restaurada — Freguesia do Louriçal, Pombal
+              </a>
+            </li>
+            <li>
+              <a href="/casas?id=moradia-lourical" class="underline text-[#36210f] font-medium">
+                Moradia Térrea Vanguardista — Pelariga, Pombal
+              </a>
+            </li>
+          </ul>
+          <p class="mt-4"><a href="/casas" class="underline text-[#b87d1d] font-medium">Ver todos os imóveis no catálogo completo &rarr;</a></p>
+        </section>
+
+        <!-- Secção Porquê escolher a Sandra Carlos com <h2> -->
+        <section>
+          <h2 class="text-2xl font-serif text-[#36210f] mb-4">Porquê escolher a Sandra Carlos</h2>
+          <ul class="list-disc pl-5 space-y-2 text-stone-700">
+            <li><strong>Mais de 11 Anos de Experiência:</strong> Profundo conhecimento do mercado imobiliário em Portugal.</li>
+            <li><strong>Rigor & Segurança Jurídica:</strong> Mediação licenciada com licença AMI 15766.</li>
+            <li><strong>Acompanhamento Próximo:</strong> Atendimento personalizado e direto em todas as fases da transação.</li>
+            <li><strong>Rede Expertimo & Agente Pro:</strong> Projeção e alcance nacional e internacional.</li>
+          </ul>
+        </section>
+
+        <!-- Secção Zonas de atuação com <h2> -->
+        <section>
+          <h2 class="text-2xl font-serif text-[#36210f] mb-4">Zonas de atuação</h2>
+          <p class="text-stone-700 leading-relaxed">
+            Atuação de referência em Pombal (Centro, Louriçal, Pelariga, Almagreira, Meirinhas, Guia, Ilha, Mata Mourisca, Redinha), Distrito de Leiria e assessoria a investidores em Portugal.
+          </p>
+        </section>
+
+        <!-- CTA para contacto -->
+        <section class="p-6 bg-[#36210f] text-white">
+          <h2 class="text-2xl font-serif text-white mb-2">Deseja Comprar ou Vender Imóvel em Portugal?</h2>
+          <p class="text-stone-300 text-sm mb-4">Fale diretamente com Sandra Carlos através do WhatsApp (+351 965881547) ou por e-mail.</p>
+          <p class="text-sm">
+            Telefone / WhatsApp: <a href="https://wa.me/351965881547" class="underline text-[#d8be9e]">+351 965 881 547</a> &bull;
+            E-mail: <a href="mailto:sandra.carlos@expertimo.eu" class="underline text-[#d8be9e]">sandra.carlos@expertimo.eu</a> &bull;
+            AMI 15766
+          </p>
+        </section>
+      </main>
+
+      <footer class="p-6 bg-[#d8be9e] text-[#36210f] text-xs">
+        <p>&copy; 2026 Sandra Carlos Consultoria Imobiliária. Todos os direitos reservados. Licença AMI 15766.</p>
+      </footer>
+    </noscript>
+
+    <!--
+      Ponto de montagem da aplicação interativa React (SPA).
+      Os componentes Header.tsx, Footer.tsx e App.tsx fornecem dinamicamente:
+      - <header> com logotipo e barra de navegação interativa
+      - <nav> com links acessíveis e estados ativos
+      - <main> com o conteúdo dinâmico (HomePage, HousesPage, PropertyDetailPage, AboutPage)
+      - <footer> estruturado com contactos oficiais, AMI 15766 e links legais
+    -->
+    <div id="root"></div>
+
+    <!-- Ponto de entrada JavaScript / TypeScript do Vite -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 120" width="620" height="120" fill="none">
+  <defs>
+    <linearGradient id="goldPillBorder" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ca982a"/>
+      <stop offset="30%" stop-color="#e9bc52"/>
+      <stop offset="70%" stop-color="#dfaa38"/>
+      <stop offset="100%" stop-color="#bd871e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Pill Outline: Transparent Background (no white fill) with Metallic Gold Border -->
+  <rect x="5" y="5" width="610" height="110" rx="55" ry="55" fill="none" stroke="url(#goldPillBorder)" stroke-width="7"/>
+
+  <!-- AGENTE PRO Typography in Cyan/Turquoise (#009bb4) -->
+  <g stroke="#009bb4" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Λ (A without horizontal crossbar) -->
+    <path d="M54 84 L76 36 L98 84"/>
+    
+    <!-- G -->
+    <path d="M148 48 C144 40 134 36 122 36 C106 36 94 48 94 60 C94 74 106 84 122 84 C138 84 148 74 148 63 H130"/>
+    
+    <!-- E -->
+    <path d="M168 36 H198 M168 60 H192 M168 84 H198 M168 36 V84"/>
+    
+    <!-- N -->
+    <path d="M218 84 V36 L254 84 V36"/>
+    
+    <!-- T -->
+    <path d="M274 36 H314 M294 36 V84"/>
+    
+    <!-- E -->
+    <path d="M332 36 H362 M332 60 H356 M332 84 H362 M332 36 V84"/>
+    
+    <!-- P -->
+    <path d="M394 84 V36 H418 C430 36 439 42 439 52 C439 61 430 67 418 67 H394"/>
+    
+    <!-- R -->
+    <path d="M455 84 V36 H477 C488 36 495 42 495 51 C495 60 487 65 476 66 L496 84 M455 66 H476"/>
+    
+    <!-- O -->
+    <ellipse cx="538" cy="60" rx="20" ry="24"/>
+  </g>
+</svg>

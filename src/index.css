@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-bodoni: "Bodoni Moda", "Didot", "Bodoni MT", serif;
+  --font-cinzel: "Cinzel", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --color-brand-ochre: #b38b59;
+  --color-brand-brown: #36210f;
+  --color-brand-stone: #fcfbf9;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+:root {
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.font-serif {
+  font-family: "Cormorant Garamond", Georgia, serif;
+}
+
+.font-bodoni {
+  font-family: "Bodoni Moda", "Didot", "Bodoni MT", serif;
+}
+
+.font-cinzel {
+  font-family: "Cinzel", Georgia, serif;
+}
+
+.font-sans {
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Custom smooth scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #faf8f5;
+}
+::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a29e;
+}
+
+/* Dynamic scroll-driven header logo and container (tracks real-time scroll velocity) */
+#main-header {
+  background-color: rgba(255, 255, 255, calc(0.92 * var(--sp, 0)));
+  border-bottom-color: rgba(231, 229, 228, calc(0.60 * var(--sp, 0)));
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, calc(0.04 * var(--sp, 0)));
+  backdrop-filter: blur(calc(12px * var(--sp, 0)));
+  -webkit-backdrop-filter: blur(calc(12px * var(--sp, 0)));
+}
+
+#main-header.menu-open-forced {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-bottom-color: rgba(231, 229, 228, 0.60) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.dynamic-header-logo-btn {
+  --h-start: 96px;
+  --h-diff: 28.8px;
+  --mt-start: -22px;
+  --mt-diff: 7px;
+  --mb-start: -15px;
+  --mb-diff: 5px;
+  --max-w-start: 480px;
+  --max-w-diff: 144px;
+
+  margin-top: calc(var(--mt-start) + var(--mt-diff) * var(--sp, 0));
+  margin-bottom: calc(var(--mb-start) + var(--mb-diff) * var(--sp, 0));
+  will-change: margin-top, margin-bottom;
+}
+
+@media (max-width: 639px) {
+  .dynamic-header-logo-btn.header-logo-property {
+    --h-diff: 0px;
+    --mt-diff: 0px;
+    --mb-diff: 0px;
+    --max-w-diff: 0px;
+  }
+}
+
+.dynamic-header-logo-img {
+  height: calc(var(--h-start) - var(--h-diff) * var(--sp, 0));
+  max-width: calc(var(--max-w-start) - var(--max-w-diff) * var(--sp, 0));
+  will-change: height, max-width;
+}
+
+@media (min-width: 640px) {
+  .dynamic-header-logo-btn {
+    --h-start: 120px;
+    --h-diff: 36px;
+    --mt-start: -26px;
+    --mt-diff: 8px;
+    --mb-start: -18px;
+    --mb-diff: 5px;
+    --max-w-start: 630px;
+    --max-w-diff: 189px;
+  }
+}
+
+@media (min-width: 768px) {
+  .dynamic-header-logo-btn {
+    --h-start: 144px;
+    --h-diff: 43.2px;
+    --mt-start: -35px;
+    --mt-diff: 11px;
+    --mb-start: -25px;
+    --mb-diff: 8px;
+    --max-w-start: 750px;
+    --max-w-diff: 225px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dynamic-header-logo-btn {
+    --h-start: 156px;
+    --h-diff: 46.8px;
+    --mt-start: -39px;
+    --mt-diff: 12px;
+    --mb-start: -29px;
+    --mb-diff: 9px;
+    --max-w-start: 870px;
+    --max-w-diff: 261px;
+  }
+}
+
+/* Image download and drag protection */
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+/* Leaflet clean styling */
+.leaflet-control-attribution {
+  font-size: 9px !important;
+  color: #78716c !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(4px);
+  padding: 2px 6px !important;
+}
+
+.leaflet-control-attribution a {
+  color: #57534e !important;
+  text-decoration: none !important;
+}
+
+.leaflet-control-attribution a:hover {
+  color: #b87d1d !important;
+}
+
+
