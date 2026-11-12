@@ -124,11 +124,15 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Center Brand Identity: Official Logo via /logo.png */}
         <div className="flex-1 min-w-0 text-center flex flex-col items-center justify-center pt-0 pb-0">
-          <button
+          <a
             id="brand-logo-button"
-            onClick={() => {
-              onNavigate('home');
-              window.scrollTo(0, 0);
+            href="/"
+            onClick={(e) => {
+              if (!e.metaKey && !e.ctrlKey) {
+                e.preventDefault();
+                onNavigate('home');
+                window.scrollTo(0, 0);
+              }
             }}
             className={`dynamic-header-logo-btn group cursor-pointer focus:outline-none inline-flex items-center justify-center text-center hover:opacity-85 ${
               onBackProperty ? 'header-logo-property' : ''
@@ -137,14 +141,20 @@ export const Header: React.FC<HeaderProps> = ({
           >
             {/* Contexto: Logótipo institucional oficial da Sandra Carlos Consultoria Imobiliária no cabeçalho */}
             <img
-              src={`https://SEU-DOMINIO-AQUI/logo-sandra-carlos-consultoria-imobiliaria.webp?v=${logoTimestamp}`}
-              alt="Logótipo oficial Sandra Carlos Consultoria Imobiliária Pombal Portugal"
+              src={`/logo-sandra-carlos-consultoria-imobiliaria.webp?v=${logoTimestamp}`}
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.src.includes('/logo.png')) {
+                  target.src = `/logo.png?v=${logoTimestamp}`;
+                }
+              }}
+              alt="Sandra Carlos Consultoria Imobiliária Pombal Portugal"
               className="dynamic-header-logo-img w-auto object-contain select-none group-hover:scale-[1.02] transition-transform duration-200"
               width="240"
               height="80"
               loading="eager"
             />
-          </button>
+          </a>
         </div>
 
         {/* Right side: Instagram icon at far right with equal top/lateral margin, menu links in exact open position */}
@@ -203,25 +213,31 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Voltar button placed right under MENU when on a property page */}
               <AnimatePresence>
                 {onBackProperty && !isMenuOpen && (
-                  <motion.button
+                  <motion.a
                     id="header-back-button"
                     key="header-back-button"
+                    href="/imoveis"
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.18 }}
-                    onClick={onBackProperty}
-                    className="font-sans text-[10px] sm:text-[11px] uppercase tracking-[0.2em] font-semibold text-[#422502] hover:text-[#b87d1d] py-0.5 px-1 cursor-pointer transition-colors flex items-center gap-1.5 focus:outline-none whitespace-nowrap group -mt-0.5"
+                    onClick={(e) => {
+                      if (!e.metaKey && !e.ctrlKey) {
+                        e.preventDefault();
+                        onBackProperty();
+                      }
+                    }}
+                    className="font-sans text-[10px] sm:text-[11px] uppercase tracking-[0.2em] font-semibold text-[#422502] hover:text-[#b87d1d] py-0.5 px-1 cursor-pointer transition-colors flex items-center gap-1.5 focus:outline-none whitespace-nowrap group -mt-0.5 no-underline"
                     aria-label="Voltar aos Imóveis"
                   >
                     <ArrowLeft size={12} strokeWidth={1.8} className="group-hover:-translate-x-0.5 transition-transform" />
                     <span className="hidden sm:inline">VOLTAR AOS IMÓVEIS</span>
                     <span className="sm:hidden">VOLTAR</span>
-                  </motion.button>
+                  </motion.a>
                 )}
               </AnimatePresence>
 
-              {/* Stacked links: CASAS, SOBRE MIM, CONTATOS displayed only when menu is opened */}
+              {/* Stacked links: IMÓVEIS, SOBRE MIM, CONTATOS displayed only when menu is opened */}
               <AnimatePresence>
                 {isMenuOpen && (
                   <motion.nav
@@ -233,48 +249,60 @@ export const Header: React.FC<HeaderProps> = ({
                     aria-label="Menu principal"
                     className="pt-1 pb-0.5 flex flex-col items-end space-y-0.5 sm:space-y-1 text-right w-full overflow-hidden"
                   >
-                    <button
-                      id="nav-link-casas"
-                      onClick={() => {
-                        onNavigate('casas');
-                        setIsMenuOpen(false);
-                        window.scrollTo(0, 0);
+                    <a
+                      id="nav-link-imoveis"
+                      href="/imoveis"
+                      onClick={(e) => {
+                        if (!e.metaKey && !e.ctrlKey) {
+                          e.preventDefault();
+                          onNavigate('imoveis');
+                          setIsMenuOpen(false);
+                          window.scrollTo(0, 0);
+                        }
                       }}
-                      className={`font-sans text-[11px] sm:text-xs uppercase tracking-[0.22em] transition-colors cursor-pointer py-0.5 ${
-                        currentPage === 'casas'
+                      className={`font-sans text-[11px] sm:text-xs uppercase tracking-[0.22em] transition-colors cursor-pointer py-0.5 no-underline ${
+                        currentPage === 'imoveis'
                           ? 'text-[#422502] font-bold border-b border-[#422502]'
                           : 'text-[#422502] hover:text-[#b87d1d] font-medium'
                       }`}
                     >
                       IMÓVEIS
-                    </button>
+                    </a>
 
-                    <button
+                    <a
                       id="nav-link-sobre"
-                      onClick={() => {
-                        onNavigate('sobre');
-                        setIsMenuOpen(false);
-                        window.scrollTo(0, 0);
+                      href="/sobre"
+                      onClick={(e) => {
+                        if (!e.metaKey && !e.ctrlKey) {
+                          e.preventDefault();
+                          onNavigate('sobre');
+                          setIsMenuOpen(false);
+                          window.scrollTo(0, 0);
+                        }
                       }}
-                      className={`font-sans text-[11px] sm:text-xs uppercase tracking-[0.22em] transition-colors cursor-pointer py-0.5 ${
+                      className={`font-sans text-[11px] sm:text-xs uppercase tracking-[0.22em] transition-colors cursor-pointer py-0.5 no-underline ${
                         currentPage === 'sobre'
                           ? 'text-[#422502] font-bold border-b border-[#422502]'
                           : 'text-[#422502] hover:text-[#b87d1d] font-medium'
                       }`}
                     >
                       SOBRE MIM
-                    </button>
+                    </a>
 
-                    <button
+                    <a
                       id="nav-link-contatos"
-                      onClick={() => {
-                        onScrollToContact();
-                        setIsMenuOpen(false);
+                      href="/#contatos"
+                      onClick={(e) => {
+                        if (!e.metaKey && !e.ctrlKey) {
+                          e.preventDefault();
+                          onScrollToContact();
+                          setIsMenuOpen(false);
+                        }
                       }}
-                      className="font-sans text-[11px] sm:text-xs uppercase tracking-[0.22em] text-[#422502] hover:text-[#b87d1d] font-medium transition-colors cursor-pointer py-0.5"
+                      className="font-sans text-[11px] sm:text-xs uppercase tracking-[0.22em] text-[#422502] hover:text-[#b87d1d] font-medium transition-colors cursor-pointer py-0.5 no-underline"
                     >
                       CONTATOS
-                    </button>
+                    </a>
                   </motion.nav>
                 )}
               </AnimatePresence>

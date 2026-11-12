@@ -54,7 +54,7 @@ export const properties: Property[] = [
       { label: 'Pisos / Andares', value: '2 Pisos' },
       { label: 'Garagem / Estacionamento', value: 'Garagem Fechada p/ 2 Viaturas + Pátio p/ 2' },
       { label: 'Piscina', value: 'Privativa com Deck de Madeira e Pré-instalação de Aquecimento' },
-      { label: 'Jardim / Terreno', value: 'Jardim Relvado com Rega Automática Inteligente' },
+      { label: 'Espaço Exterior / Jardim', value: 'Jardim Relvado com Rega Automática Inteligente' },
       { label: 'Cobertura / Telhado', value: 'Plana com Impermeabilização Dupla e Isolamento Térmico' },
       { label: 'Características do Lote', value: 'Murado, Portão Automático, Zona de Barbecue' },
       { label: 'Climatização & Aquecimento', value: 'Bomba de Calor e Piso Radiante Hidráulico' },
@@ -175,13 +175,13 @@ export const properties: Property[] = [
     ],
     description: 'Moradia isolada inserida num lote generoso na vila do Louriçal. Um refúgio perfeito para famílias que privilegiam a tranquilidade, o convívio ao ar livre e a proximidade a Pombal e às praias da região.',
     extendedDescription: [
-      'Implantada num terreno de mais de 1.200 m², esta moradia familiar destaca-se pela sua arquitetura acolhedora e zonas sociais viradas para o jardim privativo e para a magnífica piscina aquecida.',
+      'Implantada num lote privativo de mais de 1.200 m², esta moradia familiar destaca-se pela sua arquitetura acolhedora e zonas sociais viradas para o jardim privativo e para a magnífica piscina aquecida.',
       'O salão principal dispõe de lareira com recuperador de calor, tetos altos em madeira tratada e acesso direto a um alpendre com churrasqueira tradicional.',
       'A apenas 15 minutos do centro de Pombal e a curta distância das praias do litoral oeste, oferece uma qualidade de vida ímpar para quem valoriza espaço e privacidade.'
     ],
     architecturalHighlights: [
       'Piscina exterior com zona de solário e telheiro com churrasqueira',
-      'Terreno ajardinado com rega automática e furo artesiano',
+      'Lote ajardinado com rega automática e furo artesiano',
       'Salão de convívio e sala de jogos com lareira rústica',
       'Estacionamento coberto para várias viaturas e portão automático'
     ],
@@ -197,7 +197,7 @@ export const properties: Property[] = [
       { label: 'Pisos / Andares', value: '2 Pisos' },
       { label: 'Garagem / Estacionamento', value: 'Garagem Fechada p/ 3 Carros + Estacionamento Exterior' },
       { label: 'Piscina', value: 'Piscina de Água Salgada com Tratamento Automático e Cobertura Térmica' },
-      { label: 'Terreno / Lote', value: '1.250 m² com Furo Artesiano e Pomar com Árvores de Fruto' },
+      { label: 'Lote Privativo', value: '1.250 m² com Furo Artesiano e Pomar com Árvores de Fruto' },
       { label: 'Anexos Exteriores', value: 'Telheiro com Forno a Lenha e Churrasqueira, Balneários de Apoio' },
       { label: 'Climatização', value: 'Aquecimento Central a Pellets e Ar Condicionado' }
     ],
@@ -217,7 +217,7 @@ export const properties: Property[] = [
   },
   {
     id: 'quinta-redinha-pombal',
-    title: 'Quinta Tradicional com Terreno',
+    title: 'Quinta Senhorial de Cantaria',
     subtitle: 'Propriedade Histórica de Prestígio com Cantaria e Vistas Sobre o Vale de Sicó',
     status: 'vendido',
     location: 'Redinha, Pombal',
@@ -244,15 +244,15 @@ export const properties: Property[] = [
       'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&fm=webp&w=1600&q=85',
       'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&fm=webp&w=1600&q=85'
     ],
-    description: 'Propriedade de charme na histórica freguesia da Redinha, com vistas desafogadas sobre o vale e a serra de Sicó. Alia a traça tradicional portuguesa ao conforto atual, com terreno fértil e árvores de fruto.',
+    description: 'Propriedade senhorial de charme na histórica freguesia da Redinha, com vistas desafogadas sobre o vale e a serra de Sicó. Alia a traça tradicional portuguesa ao conforto atual, com olival e pomar privativo.',
     extendedDescription: [
       'Uma quinta singular com caráter nobre e paredes centenárias em pedra calcária de cantaria, totalmente reabilitada com extremo bom gosto para satisfazer os mais exigentes padrões contemporâneos.',
-      'O terreno de 3.500 m² integra olival centenário, vinha em socalcos e um poço tradicional com nascente natural. Os espaços interiores conservam vigamentos em madeira exposta, lareiras nobres e pé direito imponente.',
+      'A envolvente exterior de 3.500 m² integra olival centenário, vinha em socalcos e um poço tradicional com nascente natural. Os espaços interiores conservam vigamentos em madeira exposta, lareiras nobres e pé direito imponente.',
       'Possui ainda anexo independente com adega histórica e espaço para eventos ou alojamento adicional de hóspedes.'
     ],
     architecturalHighlights: [
       'Paredes em cantaria tradicional e detalhes em madeira nobre',
-      'Terreno com mais de 3.500 m² apto para jardim, lazer ou cultivo',
+      'Envolvente com mais de 3.500 m² murados com olival centenário e pomar',
       'Adega tradicional e anexo rústico para receber amigos e família',
       'Privacidade total a poucos minutos do centro de Pombal'
     ],
@@ -265,7 +265,7 @@ export const properties: Property[] = [
       { label: 'Outras Características Interiores', value: 'Adega com Prensas Tradicionais, Forno a Lenha Interior, Escritório com Biblioteca' }
     ],
     exteriorFeatures: [
-      { label: 'Área do Terreno', value: '3.650 m² Murados e Vedados' },
+      { label: 'Área do Lote', value: '3.650 m² Murados e Vedados' },
       { label: 'Garagem / Estacionamento', value: 'Alpendre p/ 4 Viaturas + Pátio Amplo em Calçada Portuguesa' },
       { label: 'Água e Rega', value: 'Poço com Bomba Submersível, Tanque em Pedra Tradicional' },
       { label: 'Vegetação', value: 'Olival Produtivo, Sobreiros, Árvores de Fruto e Vinha' },

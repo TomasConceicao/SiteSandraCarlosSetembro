@@ -1,4 +1,14 @@
-export type PageType = 'home' | 'sobre' | 'casas' | 'dicas' | 'contacto' | 'admin' | '404';
+export type PageType =
+  | 'home'
+  | 'sobre'
+  | 'sobre-mim'
+  | 'imoveis'
+  | 'contacto'
+  | 'login'
+  | 'admin'
+  | 'privacidade'
+  | 'termos'
+  | '404';
 
 export type PropertyStatus =
   | 'disponivel'
@@ -19,21 +29,6 @@ export interface Testimonial {
   name: string;
   role?: string;
   rating?: number;
-}
-
-export interface TipArticle {
-  id: string;
-  slug: string;
-  title: string;
-  date: string;
-  author: string;
-  categories: string[];
-  excerpt: string;
-  content: string[];
-  checklist?: string[];
-  image: string;
-  readTime: string;
-  featured?: boolean;
 }
 
 export interface PropertyFeatureItem {
@@ -86,4 +81,73 @@ export interface ContactFormData {
   phone?: string;
   subject: string;
   message: string;
+}
+
+export interface SitePhotos {
+  homeHero: string;
+  housesHero: string;
+  sandraPortrait: string;
+}
+
+export interface SiteTexts {
+  heroScrollLabel: string;
+  homeEyebrow: string;
+  homeH1: string;
+  homeSubtitle: string;
+  homeParagraph1: string;
+  homeParagraph2: string;
+  homeParagraph3: string;
+  quoteText: string;
+  quoteAuthor: string;
+  quoteSubtext: string;
+  featuredTitle: string;
+  featuredSubtitle: string;
+  housesEyebrow: string;
+  housesH1: string;
+  housesIntro1: string;
+  housesIntro2: string;
+  aboutEyebrow: string;
+  aboutH1: string;
+  aboutLeftHeading: string;
+  aboutLeftP1: string;
+  aboutLeftP2: string;
+  aboutRightHeading: string;
+  aboutRightP1: string;
+  aboutRightP2: string;
+  aboutCtaTitle: string;
+  aboutCtaText: string;
+  testimonialsEyebrow: string;
+  testimonialsTitle: string;
+  testimonialsSubtitle: string;
+}
+
+export interface SiteConfig {
+  brandName: string;
+  consultantName: string;
+  amiLicense: string;
+  partnerNetwork: string;
+  phoneDisplay: string;
+  whatsappNumber: string;
+  email: string;
+  instagramHandle: string;
+  instagramUrl: string;
+  locationText: string;
+  footerLegalNote: string;
+  copyrightText: string;
+}
+
+export interface SiteSettings {
+  texts: SiteTexts;
+  config: SiteConfig;
+  photos: SitePhotos;
+  featuredIds: string[];
+}
+
+export type AuthAssuranceLevel = 'aal1' | 'aal2' | null;
+
+export interface MfaFactorSummary {
+  id: string;
+  friendlyName?: string;
+  factorType: string;
+  status: 'verified' | 'unverified';
 }

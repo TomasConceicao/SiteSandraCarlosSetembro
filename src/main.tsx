@@ -3,9 +3,13 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { initImageProtection } from './utils/imageProtection';
+import { initAnalytics } from './utils/analytics';
 
-// Enable image protection: downloaded or dragged images become 100% white
+// Inicializa a proteção de imagens
 initImageProtection();
+
+// Inicializa condicionalmente Google Analytics 4, Tag Manager e Search Console
+initAnalytics();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

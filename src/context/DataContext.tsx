@@ -1,66 +1,117 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Property, Testimonial } from '../types';
+import { User } from '@supabase/supabase-js';
+import { AuthAssuranceLevel, Property, SiteSettings, Testimonial } from '../types';
+import { properties as defaultProperties } from '../data/properties';
+import { DEFAULT_SITE_SETTINGS } from '../data/siteSettings';
+import { initialTestimonialsData } from '../../components/ui/testimonials-columns-1';
 import {
+  AuthStateSummary,
+  deleteProperty as dbDeleteProperty,
+  deleteReview as dbDeleteReview,
   fetchProperties,
   fetchReviews,
-  getLocalProperties,
-  getLocalReviews,
-  saveProperty as dbSaveProperty,
-  deleteProperty as dbDeleteProperty,
-  saveReview as dbSaveReview,
-  deleteReview as dbDeleteReview,
+  fetchSiteSettings,
+  getAuthStatus,
   isSupabaseConfigured,
-  checkIsAdminAuthenticated,
-  signInAdmin,
+  saveProperty as dbSaveProperty,
+  saveReview as dbSaveReview,
+  saveSiteSettings as dbSaveSiteSettings,
   signOutAdmin,
+  supabase,
 } from '../lib/supabase';
 
 interface DataContextType {
   properties: Property[];
   reviews: Testimonial[];
+  siteSettings: SiteSettings;
   isLoading: boolean;
   isSupabaseConnected: boolean;
   isSupabaseReady: boolean;
+  authLoading: boolean;
+  authStatus: AuthStateSummary;
+  user: User | null;
+  aal: AuthAssuranceLevel;
   isAuthenticated: boolean;
-  login: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => Promise<void> | void;
+  refreshAuthStatus: () => Promise<AuthStateSummary>;
+  logout: () => Promise<void>;
   refresh: () => Promise<void>;
   refreshProperties: () => Promise<void>;
   refreshReviews: () => Promise<void>;
+  refreshSiteSettings: () => Promise<void>;
   saveProperty: (prop: Property) => Promise<{ success: boolean; error?: string }>;
-  removeProperty: (id: string) => Promise<boolean>;
-  deleteProperty: (id: string) => Promise<boolean>;
+  removeProperty: (id: string) => Promise<{ success: boolean; error?: string }>;
+  deleteProperty: (id: string) => Promise<{ success: boolean; error?: string }>;
   saveReview: (review: Testimonial) => Promise<{ success: boolean; error?: string }>;
-  removeReview: (id: string) => Promise<boolean>;
-  deleteReview: (id: string) => Promise<boolean>;
+  removeReview: (id: string) => Promise<{ success: boolean; error?: string }>;
+  deleteReview: (id: string) => Promise<{ success: boolean; error?: string }>;
+  saveSiteSettings: (settings: SiteSettings) => Promise<{ success: boolean; error?: string }>;
+  toggleFeaturedProperty: (id: string) => Promise<{ success: boolean; ids: string[]; error?: string }>;
 }
+
+const emptyAuthStatus: AuthStateSummary = {
+  user: null,
+  hasSession: false,
+  aal: null,
+  nextLevel: null,
+  verifiedFactors: [],
+  unverifiedFactors: [],
+  isAal2: false,
+};
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [properties, setProperties] = useState<Property[]>(() => getLocalProperties());
-  const [reviews, setReviews] = useState<Testimonial[]>(() => getLocalReviews());
+  const [properties, setProperties] = useState<Property[]>(defaultProperties);
+  const [reviews, setReviews] = useState<Testimonial[]>(initialTestimonialsData);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
+  const [authStatus, setAuthStatus] = useState<AuthStateSummary>(emptyAuthStatus);
 
-  // Verifica estado de autenticação inicial
-  useEffect(() => {
-    checkIsAdminAuthenticated().then((auth) => {
-      setIsAuthenticated(auth);
-    });
+  const refreshAuthStatus = useCallback(async (): Promise<AuthStateSummary> => {
+    const status = await getAuthStatus();
+    setAuthStatus(status);
+    setAuthLoading(false);
+    return status;
   }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    refreshAuthStatus();
+
+    if (!supabase) {
+      setAuthLoading(false);
+      return;
+    }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      if (mounted) {
+        refreshAuthStatus();
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [refreshAuthStatus]);
 
   const loadAllData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [propsData, reviewsData] = await Promise.all([
+      const [propsData, reviewsData, settingsData] = await Promise.all([
         fetchProperties(),
         fetchReviews(),
+        fetchSiteSettings(),
       ]);
       setProperties(propsData);
       setReviews(reviewsData);
+      setSiteSettings(settingsData);
     } catch (err) {
-      console.error('Erro ao carregar dados:', err);
+      console.error('Erro ao carregar dados públicos do Supabase:', err);
     } finally {
       setIsLoading(false);
     }
@@ -68,25 +119,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     loadAllData();
-
-    // Listeners para atualizações dinâmicas
-    const handlePropsUpdated = (e: any) => {
-      if (e.detail) setProperties(e.detail);
-      else fetchProperties().then(setProperties);
-    };
-
-    const handleReviewsUpdated = (e: any) => {
-      if (e.detail) setReviews(e.detail);
-      else fetchReviews().then(setReviews);
-    };
-
-    window.addEventListener('properties_updated', handlePropsUpdated);
-    window.addEventListener('reviews_updated', handleReviewsUpdated);
-
-    return () => {
-      window.removeEventListener('properties_updated', handlePropsUpdated);
-      window.removeEventListener('reviews_updated', handleReviewsUpdated);
-    };
   }, [loadAllData]);
 
   const handleSaveProperty = async (prop: Property): Promise<{ success: boolean; error?: string }> => {
@@ -98,16 +130,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return res;
   };
 
-  const handleDeleteProperty = async (id: string): Promise<boolean> => {
+  const handleDeleteProperty = async (id: string): Promise<{ success: boolean; error?: string }> => {
     const res = await dbDeleteProperty(id);
     if (res.success) {
       const updated = await fetchProperties();
       setProperties(updated);
     }
-    return Boolean(res.success);
+    return res;
   };
 
-  const handleSaveReview = async (review: Testimonial): Promise<{ success: boolean; error?: string }> => {
+  const handleSaveReview = async (
+    review: Testimonial
+  ): Promise<{ success: boolean; error?: string }> => {
     const res = await dbSaveReview(review);
     if (res.success) {
       const updated = await fetchReviews();
@@ -116,26 +150,58 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return res;
   };
 
-  const handleDeleteReview = async (id: string): Promise<boolean> => {
+  const handleDeleteReview = async (id: string): Promise<{ success: boolean; error?: string }> => {
     const res = await dbDeleteReview(id);
     if (res.success) {
       const updated = await fetchReviews();
       setReviews(updated);
     }
-    return Boolean(res.success);
+    return res;
   };
 
-  const handleLogin = async (email: string, pass: string) => {
-    const result = await signInAdmin(email, pass);
-    if (result.success) {
-      setIsAuthenticated(true);
+  const handleSaveSiteSettings = async (
+    settings: SiteSettings
+  ): Promise<{ success: boolean; error?: string }> => {
+    const res = await dbSaveSiteSettings(settings);
+    if (res.success) {
+      setSiteSettings(settings);
     }
-    return result;
+    return res;
+  };
+
+  const handleToggleFeaturedProperty = async (
+    id: string
+  ): Promise<{ success: boolean; ids: string[]; error?: string }> => {
+    const current = siteSettings.featuredIds || [];
+    let updated: string[];
+    if (current.includes(id)) {
+      if (current.length <= 1) {
+        return {
+          success: false,
+          ids: current,
+          error: 'É necessário manter pelo menos 1 imóvel em destaque.',
+        };
+      }
+      updated = current.filter((item) => item !== id);
+    } else {
+      updated = [...current, id];
+    }
+
+    const nextSettings: SiteSettings = {
+      ...siteSettings,
+      featuredIds: updated,
+    };
+    const res = await handleSaveSiteSettings(nextSettings);
+    return {
+      success: res.success,
+      ids: res.success ? updated : current,
+      error: res.error,
+    };
   };
 
   const handleLogout = async () => {
     await signOutAdmin();
-    setIsAuthenticated(false);
+    setAuthStatus(emptyAuthStatus);
   };
 
   const handleRefresh = async () => {
@@ -147,11 +213,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         properties,
         reviews,
+        siteSettings,
         isLoading,
         isSupabaseConnected: isSupabaseConfigured,
         isSupabaseReady: isSupabaseConfigured,
-        isAuthenticated,
-        login: handleLogin,
+        authLoading,
+        authStatus,
+        user: authStatus.user,
+        aal: authStatus.aal,
+        isAuthenticated: authStatus.isAal2,
+        refreshAuthStatus,
         logout: handleLogout,
         refresh: handleRefresh,
         refreshProperties: async () => {
@@ -162,12 +233,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const data = await fetchReviews();
           setReviews(data);
         },
+        refreshSiteSettings: async () => {
+          const data = await fetchSiteSettings();
+          setSiteSettings(data);
+        },
         saveProperty: handleSaveProperty,
         removeProperty: handleDeleteProperty,
         deleteProperty: handleDeleteProperty,
         saveReview: handleSaveReview,
         removeReview: handleDeleteReview,
         deleteReview: handleDeleteReview,
+        saveSiteSettings: handleSaveSiteSettings,
+        toggleFeaturedProperty: handleToggleFeaturedProperty,
       }}
     >
       {children}

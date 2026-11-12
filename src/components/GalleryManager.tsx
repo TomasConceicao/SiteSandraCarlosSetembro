@@ -1,10 +1,19 @@
-import React, { useRef } from 'react';
-import { Upload, ArrowUp, ArrowDown, Trash2, Star } from 'lucide-react';
-
-interface GalleryItem {
-  id: string;
-  url: string;
-}
+import React, { useRef, useState } from 'react';
+import {
+  Upload,
+  ArrowUp,
+  ArrowDown,
+  Trash2,
+  Star,
+  Loader2,
+  AlertCircle,
+} from 'lucide-react';
+import {
+  deleteStorageImage,
+  extractStoragePathFromPublicUrl,
+  replaceImageInStorage,
+  uploadImageToStorage,
+} from '../lib/supabase';
 
 interface GalleryManagerProps {
   coverImage: string;
@@ -20,67 +29,68 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({
   onChange,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
-  // Carregar ficheiros de imagem (múltiplos suportados)
-  const handleFilesAdded = (files: FileList | null) => {
+  const handleCoverFile = async (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Por favor selecione um ficheiro de imagem válido.');
+      return;
+    }
+
+    setUploadError(null);
+    setIsUploadingCover(true);
+    const res = coverImage
+      ? await replaceImageInStorage(coverImage, file, 'properties')
+      : await uploadImageToStorage(file, 'properties');
+    setIsUploadingCover(false);
+
+    if (res.success && res.url) {
+      onCoverChange(res.url);
+    } else {
+      setUploadError(res.error || 'Erro ao carregar fotografia de capa.');
+    }
+  };
+
+  const handleFilesAdded = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
     const fileList = Array.from(files).filter((f) => f.type.startsWith('image/'));
     if (fileList.length === 0) {
-      alert('Por favor selecione ficheiros de imagem válidos.');
+      setUploadError('Por favor selecione ficheiros de imagem válidos.');
       return;
     }
 
-    // Comprime as imagens para web (max 1600px, 80% qualidade) evitando payloads gigantes
-    const compressFile = (file: File): Promise<string> => {
-      return new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => {
-            let { width, height } = img;
-            const maxDim = 1600;
-            if (width > maxDim || height > maxDim) {
-              if (width > height) {
-                height = Math.round((height * maxDim) / width);
-                width = maxDim;
-              } else {
-                width = Math.round((width * maxDim) / height);
-                height = maxDim;
-              }
-            }
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-              ctx.drawImage(img, 0, 0, width, height);
-              resolve(canvas.toDataURL('image/jpeg', 0.82));
-            } else {
-              resolve(e.target?.result as string);
-            }
-          };
-          img.onerror = () => resolve(e.target?.result as string);
-          img.src = e.target?.result as string;
-        };
-        reader.onerror = () => resolve('');
-        reader.readAsDataURL(file);
-      });
-    };
+    setUploadError(null);
+    setIsUploadingGallery(true);
 
-    Promise.all(fileList.map(compressFile)).then((newUrls) => {
-      const valid = newUrls.filter(Boolean);
-      // Se ainda não houver foto de capa, a primeira torna-se capa
-      if (!coverImage && valid.length > 0) {
-        onCoverChange(valid[0]);
-        onChange([...images, ...valid.slice(1)]);
-      } else {
-        onChange([...images, ...valid]);
+    const uploadedUrls: string[] = [];
+    for (const file of fileList) {
+      const res = await uploadImageToStorage(file, 'properties');
+      if (res.success && res.url) {
+        uploadedUrls.push(res.url);
+      } else if (res.error) {
+        setUploadError(res.error);
       }
-    });
+    }
+
+    setIsUploadingGallery(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
+    if (uploadedUrls.length > 0) {
+      if (!coverImage) {
+        onCoverChange(uploadedUrls[0]);
+        onChange([...images, ...uploadedUrls.slice(1)]);
+      } else {
+        onChange([...images, ...uploadedUrls]);
+      }
+    }
   };
 
-  // Mover foto para cima na ordem
   const moveUp = (index: number) => {
     if (index === 0) return;
     const next = [...images];
@@ -90,7 +100,6 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({
     onChange(next);
   };
 
-  // Mover foto para baixo na ordem
   const moveDown = (index: number) => {
     if (index === images.length - 1) return;
     const next = [...images];
@@ -100,12 +109,15 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({
     onChange(next);
   };
 
-  // Remover foto secundária
-  const removeImage = (index: number) => {
+  const removeImage = async (index: number) => {
+    const targetUrl = images[index];
     onChange(images.filter((_, i) => i !== index));
+    const storagePath = extractStoragePathFromPublicUrl(targetUrl);
+    if (storagePath) {
+      await deleteStorageImage(storagePath);
+    }
   };
 
-  // Promover foto da galeria a Foto de Capa (e a antiga capa vai para a galeria)
   const setAsCover = (index: number) => {
     const target = images[index];
     const newImages = images.filter((_, i) => i !== index);
@@ -118,13 +130,20 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({
 
   return (
     <div className="space-y-4">
+      {uploadError && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-xs flex items-start gap-2">
+          <AlertCircle size={15} className="shrink-0 mt-0.5" />
+          <span>{uploadError}</span>
+        </div>
+      )}
+
       {/* 1. Fotografia de Capa / Principal */}
       <div className="p-4 bg-stone-50 border border-stone-300">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Star size={15} className="text-[#b87d1d] fill-[#b87d1d]" />
             <span className="text-xs uppercase tracking-wider font-bold text-[#36210f]">
-              Fotografia de Capa (Principal do Imóvel) *
+              Fotografia de Capa (Supabase Storage) *
             </span>
           </div>
           <span className="text-[10px] text-stone-500 uppercase tracking-wider">
@@ -134,61 +153,64 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({
 
         {coverImage ? (
           <div className="relative group border border-stone-300 bg-stone-900/5 max-h-48 overflow-hidden">
-            {/* Contexto: Capa principal do imóvel selecionada no gestor de galeria do painel de administração */}
             <img
               src={coverImage}
               alt="Fotografia de Capa do Imóvel - Sandra Carlos Consultoria Imobiliária"
               className="w-full h-44 object-cover object-center"
               loading="lazy"
-              width="400"
-              height="176"
+              width={400}
+              height={176}
             />
             <div className="absolute inset-0 bg-stone-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
               <label className="px-3 py-1.5 bg-white hover:bg-[#d8be9e] text-stone-900 text-xs font-semibold uppercase tracking-wider cursor-pointer transition-colors">
-                Trocar Capa
+                {isUploadingCover ? 'A carregar...' : 'Trocar Capa'}
                 <input
                   type="file"
                   accept="image/*"
+                  disabled={isUploadingCover}
                   className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) {
-                      const reader = new FileReader();
-                      reader.onload = (ev) => onCoverChange(ev.target?.result as string);
-                      reader.readAsDataURL(f);
-                    }
-                  }}
+                  onChange={(e) => handleCoverFile(e.target.files?.[0])}
                 />
               </label>
             </div>
             <div className="px-3 py-1 bg-white/95 border-t border-stone-200 text-[10px] font-mono text-stone-600 truncate">
-              {coverImage.startsWith('data:') ? 'Imagem carregada' : coverImage}
+              {coverImage}
             </div>
           </div>
         ) : (
           <label className="border-2 border-dashed border-stone-300 hover:border-[#36210f] bg-white p-5 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors block text-center">
-            <Upload size={20} className="text-stone-400" />
+            {isUploadingCover ? (
+              <Loader2 size={20} className="text-[#36210f] animate-spin" />
+            ) : (
+              <Upload size={20} className="text-stone-400" />
+            )}
             <span className="text-xs font-semibold text-[#36210f]">
-              Carregar Foto de Capa
+              {isUploadingCover
+                ? 'A enviar capa para o Supabase Storage...'
+                : 'Carregar Foto de Capa'}
             </span>
             <span className="text-[10px] text-stone-500">
-              Esta fotografia surge nas listagens e no topo do detalhe
+              Guardada automaticamente no bucket site-images
             </span>
             <input
               type="file"
               accept="image/*"
+              disabled={isUploadingCover}
               className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) {
-                  const reader = new FileReader();
-                  reader.onload = (ev) => onCoverChange(ev.target?.result as string);
-                  reader.readAsDataURL(f);
-                }
-              }}
+              onChange={(e) => handleCoverFile(e.target.files?.[0])}
             />
           </label>
         )}
+
+        <div className="mt-2">
+          <input
+            type="text"
+            value={coverImage}
+            onChange={(e) => onCoverChange(e.target.value)}
+            placeholder="Ou cole o URL público da imagem"
+            className="w-full px-3 py-1.5 bg-white border border-stone-300 text-[11px] font-mono text-stone-800 focus:outline-none focus:border-[#36210f]"
+          />
+        </div>
       </div>
 
       {/* 2. Fotografias Secundárias com Controlo de Ordem */}
@@ -199,17 +221,22 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({
               Galeria de Fotografias Adicionais ({images.length})
             </label>
             <p className="text-[11px] text-stone-500">
-              Carregue as fotos e utilize as setas ▲ ▼ para reordenar a sequência de apresentação.
+              Carregue fotos para o Supabase Storage e reordene com as setas.
             </p>
           </div>
 
           <button
             type="button"
+            disabled={isUploadingGallery}
             onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#36210f] hover:bg-[#b87d1d] text-white text-xs uppercase tracking-wider font-semibold transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#36210f] hover:bg-[#b87d1d] text-white text-xs uppercase tracking-wider font-semibold transition-colors cursor-pointer disabled:opacity-60"
           >
-            <Upload size={13} />
-            <span>Adicionar Fotos</span>
+            {isUploadingGallery ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <Upload size={13} />
+            )}
+            <span>{isUploadingGallery ? 'A enviar...' : 'Adicionar Fotos'}</span>
           </button>
 
           <input
@@ -224,7 +251,7 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({
 
         {images.length === 0 ? (
           <div
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => !isUploadingGallery && fileInputRef.current?.click()}
             className="border-2 border-dashed border-stone-300 p-6 text-center bg-[#faf8f5] hover:border-stone-400 cursor-pointer"
           >
             <Upload size={20} className="mx-auto text-stone-400 mb-1" />
@@ -232,33 +259,30 @@ export const GalleryManager: React.FC<GalleryManagerProps> = ({
               Nenhuma fotografia adicional na galeria
             </p>
             <p className="text-[11px] text-stone-500">
-              Clique aqui para selecionar uma ou várias fotos do seu computador
+              Clique aqui para enviar uma ou várias fotos para o Supabase Storage
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {images.map((url, idx) => (
               <div
-                key={idx}
+                key={`${url}-${idx}`}
                 className="bg-white border border-stone-300 overflow-hidden flex flex-col shadow-xs"
               >
-                {/* Visualizador da Imagem */}
                 <div className="relative h-28 bg-stone-100 overflow-hidden">
-                  {/* Contexto: Fotografia secundária da galeria no painel de administração */}
                   <img
                     src={url}
                     alt={`Fotografia adicional #${idx + 2} da galeria do imóvel`}
                     className="w-full h-full object-cover object-center"
                     loading="lazy"
-                    width="280"
-                    height="112"
+                    width={280}
+                    height={112}
                   />
                   <div className="absolute top-1.5 left-1.5 px-2 py-0.5 bg-stone-900/80 text-white text-[10px] font-bold tracking-wider">
                     #{idx + 2}
                   </div>
                 </div>
 
-                {/* Barra de Ações e Ordem */}
                 <div className="p-2 bg-[#faf8f5] border-t border-stone-200 flex items-center justify-between gap-1">
                   <div className="flex items-center gap-1">
                     <button

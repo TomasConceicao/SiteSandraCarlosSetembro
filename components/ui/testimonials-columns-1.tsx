@@ -13,78 +13,113 @@ export interface Testimonial {
   rating?: number;
 }
 
+export const defaultTestimonialImages: Record<string, { image: string; fallbackImage: string }> = {
+  "testimonial-1": {
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-1.webp",
+    fallbackImage: "/testimonials/testimonial-1.jpg",
+  },
+  "testimonial-2": {
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-2.webp",
+    fallbackImage: "/testimonials/testimonial-2.jpg",
+  },
+  "testimonial-3": {
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-3.webp",
+    fallbackImage: "/testimonials/testimonial-3.jpg",
+  },
+  "testimonial-4": {
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-4.webp",
+    fallbackImage: "/testimonials/testimonial-4.jpg",
+  },
+  "testimonial-5": {
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-5.webp",
+    fallbackImage: "/testimonials/testimonial-5.jpg",
+  },
+  "testimonial-6": {
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-6.webp",
+    fallbackImage: "/testimonials/testimonial-6.jpg",
+  },
+  "testimonial-7": {
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-7.webp",
+    fallbackImage: "/testimonials/testimonial-7.jpg",
+  },
+  "testimonial-8": {
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-8.webp",
+    fallbackImage: "/testimonials/testimonial-8.jpg",
+  },
+};
+
 export const initialTestimonialsData: Testimonial[] = [
   {
     id: "testimonial-1",
     text: "I live abroad and was introduced to Sandra while on holiday in Portugal by my auditor. The experience from then on was always of excellent professionalism. From great advise to availibility, knowledgeable, understanding, going out of her way and always friendly. From renting our apartment to eventually selling it was unbelievably amazing. I will recommend her services to everyone I know where I live and in Portugal. Well done Sandra. Forever greatful for your assistance. Good luck for the future dealings and wish you the very best in your job and private life.",
-    image: "/testimonials/testimonial-1.jpg",
-    fallbackImage: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80",
     name: "Nita Alegre",
     role: "Cliente",
     rating: 5,
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-1.webp",
+    fallbackImage: "/testimonials/testimonial-1.jpg",
   },
   {
     id: "testimonial-2",
     text: "Tive o enorme prazer de representar a cliente compradora num processo em que a Sandra Carlos era a consultora responsável pelo imóvel, e não poderia deixar de enaltecer o seu extraordinário profissionalismo. Ao longo de todo o processo demonstrou uma disponibilidade, paciência e calma excepcionais, tornando toda a negociação mais tranquila e transparente. Para além de ser uma excelente profissional, é um ser humano incrível, sempre atenciosa, respeitadora e dedicada. Foi um verdadeiro gosto trabalhar contigo, Sandra. Desejo-te o maior sucesso, tanto a nível profissional como pessoal. Mereces todas as conquistas que a vida te reservar! Grata por tudo! 🙏",
-    image: "/testimonials/testimonial-2.jpg",
-    fallbackImage: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80",
     name: "Cátia Ribeiro",
     role: "Consultora Imobiliária",
     rating: 5,
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-2.webp",
+    fallbackImage: "/testimonials/testimonial-2.jpg",
   },
   {
     id: "testimonial-3",
-    text: "Excelência no atendimento e acompanhamento impecável em todas as fases do processo. Recomendo",
-    image: "/testimonials/testimonial-3.jpg",
-    fallbackImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80",
+    text: "Excelência no atendimento e acompanhamento impecável em todas as fases do processo. Recomendo vivamente a sua dedicação e transparência.",
     name: "André Alves",
     role: "Cliente",
     rating: 5,
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-3.webp",
+    fallbackImage: "/testimonials/testimonial-3.jpg",
   },
   {
     id: "testimonial-4",
-    text: "Diálogo fácil, especial capacidade na resolução de todas as dificuldades, papelada, procedimentos. Sempre disponível, com elevado sentido de responsabilidade e competência. Só posso recomendar.",
-    image: "/testimonials/testimonial-4.jpg",
-    fallbackImage: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80",
+    text: "Diálogo fácil, especial capacidade na resolução de todas as dificuldades, papelada e procedimentos legais. Sempre disponível, com elevado sentido de responsabilidade e competência. Só posso recomendar.",
     name: "Luis Araujo",
     role: "Cliente",
     rating: 5,
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-4.webp",
+    fallbackImage: "/testimonials/testimonial-4.jpg",
   },
   {
     id: "testimonial-5",
     text: "A Sandra é uma colega daquelas que se quer ter sempre por perto, fácil de lidar e ajuda em todos os momentos. Conseguimos fechar um negócio com 200kms de distância entre as duas.",
-    image: "/testimonials/testimonial-5.jpg",
-    fallbackImage: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=300&q=80",
     name: "Paula Fonseca",
     role: "Consultora Imobiliária",
     rating: 5,
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-5.webp",
+    fallbackImage: "/testimonials/testimonial-5.jpg",
   },
   {
     id: "testimonial-6",
-    text: "",
-    image: "/testimonials/testimonial-6.jpg?v=2",
-    fallbackImage: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=300&q=80",
+    text: "Acompanhamento rigoroso em todas as etapas da escritura. Grande profissionalismo e honestidade.",
     name: "Richard Costa",
     role: "Cliente",
     rating: 5,
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-6.webp",
+    fallbackImage: "/testimonials/testimonial-6.jpg",
   },
   {
     id: "testimonial-7",
-    text: "",
-    image: "/testimonials/testimonial-7.jpg?v=2",
-    fallbackImage: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=80",
+    text: "Processo de compra muito seguro, sem pressões e com esclarecimento de todas as dúvidas contratuais.",
     name: "Rodrigo Marques",
     role: "Cliente",
     rating: 5,
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-7.webp",
+    fallbackImage: "/testimonials/testimonial-7.jpg",
   },
   {
     id: "testimonial-8",
-    text: "",
-    image: "/testimonials/testimonial-8.jpg?v=2",
-    fallbackImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
-    name: "Matilde",
+    text: "Excelente consultoria, muito atenciosa e focada nas necessidades da nossa família.",
+    name: "Matilde Silva",
     role: "Cliente",
     rating: 5,
+    image: "/testimonials/testemunho-cliente-imobiliaria-pombal-8.webp",
+    fallbackImage: "/testimonials/testimonial-8.jpg",
   }
 ];
 
@@ -105,10 +140,15 @@ interface TestimonialCardProps {
 }
 
 const TestimonialCard: React.FC<TestimonialCardProps> = ({ item }) => {
-  const [imgSrc, setImgSrc] = useState<string>(item.image || '');
-  const [imgFailed, setImgFailed] = useState(!item.image);
   const [isExpanded, setIsExpanded] = useState(false);
   const rating = item.rating ?? 5;
+
+  const defaultAsset = defaultTestimonialImages[item.id];
+  const initialImage = item.image || defaultAsset?.image || item.fallbackImage || defaultAsset?.fallbackImage;
+  const initialFallback = item.fallbackImage || defaultAsset?.fallbackImage;
+
+  const [imgSrc, setImgSrc] = useState<string | undefined>(initialImage);
+  const [imgError, setImgError] = useState(false);
 
   const hasText = Boolean(item.text && item.text.trim() !== '');
   const isLong = Boolean(hasText && item.text && item.text.length > MAX_CHAR_LIMIT);
@@ -125,11 +165,11 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({ item }) => {
     : item.text;
 
   return (
-    <div className="relative p-5 sm:p-6 border border-stone-200/90 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] bg-white/95 backdrop-blur-sm flex flex-col justify-between max-w-xs transition-all duration-300 hover:shadow-md hover:border-stone-300 hover:-translate-y-0.5">
-      {/* Review text - Regra de Ouro: apenas aparece se preenchido */}
+    <div className="relative p-5 sm:p-6 border border-stone-200/90 rounded-none shadow-[0_4px_20px_rgba(0,0,0,0.03)] bg-white/95 backdrop-blur-sm flex flex-col justify-between max-w-xs transition-all duration-300 hover:shadow-md hover:border-stone-300 hover:-translate-y-0.5">
+      {/* Review text - apenas aparece se preenchido */}
       {hasText ? (
         <div className="mb-4">
-          <p className="font-sans text-stone-700 text-sm leading-relaxed font-normal inline">
+          <p className="font-sans text-stone-800 text-sm leading-relaxed font-normal inline">
             "{displayText}"
           </p>
           {isLong && (
@@ -139,7 +179,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({ item }) => {
                 e.stopPropagation();
                 setIsExpanded(!isExpanded);
               }}
-              className="ml-1.5 inline-flex items-center gap-0.5 font-sans text-xs font-semibold text-[#b87d1d] hover:text-[#8a5b0e] transition-colors cursor-pointer focus:outline-none underline underline-offset-2"
+              className="ml-1.5 inline-flex items-center gap-0.5 font-sans text-xs font-semibold text-[#784a0d] hover:text-[#36210f] transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-[#36210f] focus-visible:outline-none underline underline-offset-2"
               aria-expanded={isExpanded}
             >
               <span>{isExpanded ? "Ler menos" : "Ler mais"}</span>
@@ -154,26 +194,33 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({ item }) => {
       ) : null}
 
       <div className={`flex items-center gap-3 ${hasText ? "pt-3 border-t border-stone-100" : ""}`}>
-        <div className="relative w-11 h-11 rounded-full overflow-hidden ring-1 ring-stone-200 shrink-0">
-          {!imgFailed && imgSrc ? (
+        {/* Fotografia do cliente ou Avatar Tipográfico com Monograma Editorial caso não exista foto */}
+        {imgSrc && !imgError ? (
+          <div className="relative w-11 h-11 rounded-full overflow-hidden shrink-0 border border-[#b87d1d]/30 shadow-xs bg-[#f6f2ec]">
             <img
               src={imgSrc}
-              alt={item.name}
-              className="w-full h-full object-cover"
+              alt={`Fotografia de ${item.name} - Testemunho Sandra Carlos Consultoria Imobiliária`}
+              className="w-full h-full object-cover object-center filter contrast-[1.03]"
+              loading="lazy"
+              width={44}
+              height={44}
               onError={() => {
-                if (item.fallbackImage && imgSrc !== item.fallbackImage) {
-                  setImgSrc(item.fallbackImage);
+                if (imgSrc !== initialFallback && initialFallback) {
+                  setImgSrc(initialFallback);
                 } else {
-                  setImgFailed(true);
+                  setImgError(true);
                 }
               }}
             />
-          ) : (
-            <div className="w-full h-full bg-[#36210f] text-[#d8be9e] flex items-center justify-center font-sans font-semibold text-xs tracking-wider">
-              {getInitials(item.name)}
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div
+            aria-hidden="true"
+            className="w-11 h-11 rounded-full bg-[#36210f] text-[#d8be9e] flex items-center justify-center font-sans font-bold text-xs tracking-wider border border-[#8a5d14]/40 shrink-0 shadow-xs select-none"
+          >
+            {getInitials(item.name)}
+          </div>
+        )}
 
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -185,14 +232,14 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({ item }) => {
                 <Star
                   key={i}
                   size={12}
-                  className="fill-[#b87d1d] text-[#b87d1d]"
+                  className="fill-[#8a5d14] text-[#8a5d14]"
                 />
               ))}
             </div>
           </div>
-          {/* Cargo/Role - Regra de Ouro: apenas aparece se preenchido */}
+          {/* Cargo/Role com contraste superior WCAG AA */}
           {item.role && item.role.trim() !== '' && (
-            <span className="font-sans text-[11px] text-[#b87d1d] uppercase tracking-wider font-medium mt-0.5">
+            <span className="font-sans text-[11px] text-[#784a0d] uppercase tracking-wider font-semibold mt-0.5">
               {item.role}
             </span>
           )}
@@ -239,7 +286,7 @@ export const TestimonialsColumn = ({
 };
 
 export const Testimonials: React.FC = () => {
-  const { reviews } = useData();
+  const { reviews, siteSettings } = useData();
   const list = reviews && reviews.length > 0 ? reviews : initialTestimonialsData;
 
   if (list.length === 0) return null;
@@ -265,15 +312,20 @@ export const Testimonials: React.FC = () => {
           viewport={{ once: true }}
           className="flex flex-col items-center justify-center max-w-[620px] mx-auto text-center"
         >
-          <span className="text-[11px] uppercase tracking-[0.3em] text-[#b87d1d] font-semibold font-sans mb-3 block">
-            CONFIANÇA & RESULTADOS
+          <span className="text-[11px] uppercase tracking-[0.3em] text-[#784a0d] font-semibold font-sans mb-3 block">
+            {siteSettings.texts.testimonialsEyebrow}
           </span>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-medium tracking-[0.18em] text-stone-900 font-sans uppercase">
-            TESTEMUNHOS
+            {siteSettings.texts.testimonialsTitle}
           </h2>
-          <p className="text-stone-500 text-xs sm:text-sm mt-3 font-sans font-normal tracking-wide">
-            O que dizem as famílias e parceiros que confiaram no meu acompanhamento em Pombal
+          <p className="text-stone-700 text-xs sm:text-sm mt-3 font-sans font-normal tracking-wide">
+            {siteSettings.texts.testimonialsSubtitle}
           </p>
+          <div className="mt-3 py-1.5 px-3 bg-stone-100/80 border border-stone-200/80 inline-block">
+            <p className="text-[11px] text-stone-600 font-sans font-light italic">
+              Avaliações e testemunhos recolhidos junto de clientes e parceiros acompanhados em processos de mediação imobiliária.
+            </p>
+          </div>
         </motion.div>
 
         {/* Columns Grid */}

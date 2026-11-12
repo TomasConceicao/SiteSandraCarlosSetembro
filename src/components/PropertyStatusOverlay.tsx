@@ -70,103 +70,120 @@ export const PropertyStatusOverlay: React.FC<PropertyStatusOverlayProps> = ({
   subtitle,
   className = '',
 }) => {
-  if (!status || status === 'disponivel') return null;
+  if (!status || status === 'disponivel' || status === 'none') return null;
 
-  // Definições de conteúdo consoante o estado
+  // Normalização de chaves de estado (suporte pt e en)
+  const normalizedStatus =
+    status === 'sold' ? 'vendido' :
+    status === 'reserved' ? 'reservado' :
+    status === 'new' ? 'novidade' :
+    status;
+
+  // Definições de conteúdo e estilo refinado de luxo por estado
   const config = {
     vendido: {
       title: statusLabel || 'VENDIDO',
-      stackedTitle: ['JUST', 'SOLD'],
-      subtext: subtitle || 'TRANSAÇÃO CONCLUÍDA • SANDRA CARLOS',
-      heroSubtext: 'IMÓVEL TRANSACIONADO COM SUCESSO',
-      cornerBadge: 'VENDIDO',
-      badgeBg: 'bg-[#261501]',
+      subtext: subtitle || 'TRANSAÇÃO CONCLUÍDA',
+      badgeBg: 'bg-[#261501]/95',
       badgeBorder: 'border-[#D6920B]/60',
       badgeText: 'text-[#D6920B]',
-      accentColor: 'text-[#D6920B]',
-      overlayDarkness: 'bg-stone-950/50 group-hover:bg-stone-950/60',
+      dotColor: 'bg-[#D6920B]',
+      overlayDarkness: 'bg-stone-950/45 group-hover:bg-stone-950/55',
     },
     reservado: {
       title: statusLabel || 'RESERVADO',
-      stackedTitle: ['UNDER', 'CONTRACT'],
-      subtext: subtitle || 'PROCESSO EM CURSO • POMBAL',
-      heroSubtext: 'PROPOSTA ACEITE & RESERVADA',
-      cornerBadge: 'RESERVADO',
-      badgeBg: 'bg-[#291a0b]',
+      subtext: subtitle || 'PROCESSO EM CURSO',
+      badgeBg: 'bg-[#291a0b]/95',
       badgeBorder: 'border-[#D6920B]/60',
       badgeText: 'text-[#D6920B]',
-      accentColor: 'text-[#D6920B]',
-      overlayDarkness: 'bg-stone-950/45 group-hover:bg-stone-950/55',
+      dotColor: 'bg-[#D6920B]',
+      overlayDarkness: 'bg-stone-950/40 group-hover:bg-stone-950/50',
     },
     novidade: {
       title: statusLabel || 'NOVIDADE',
-      stackedTitle: ['NOVA', 'ENTRADA'],
-      subtext: subtitle || 'NOVA ENTRADA NO MERCADO • POMBAL',
-      heroSubtext: 'OPORTUNIDADE EXCLUSIVA RECENTE',
-      cornerBadge: 'NOVIDADE',
-      badgeBg: 'bg-[#1c1917]',
+      subtext: subtitle || 'NOVA ENTRADA NO MERCADO',
+      badgeBg: 'bg-[#1c1917]/95',
       badgeBorder: 'border-[#D6920B]/60',
       badgeText: 'text-[#D6920B]',
-      accentColor: 'text-[#D6920B]',
-      overlayDarkness: 'bg-stone-950/35 group-hover:bg-stone-950/45',
+      dotColor: 'bg-[#D6920B]',
+      overlayDarkness: 'bg-stone-950/30 group-hover:bg-stone-950/40',
     },
-  }[status];
+  }[normalizedStatus];
 
   if (!config) return null;
 
-  // 1. VARIANTE DE CARTÃO (Estilo editorial limpo: título e subtítulo centrados)
+  // 1. VARIANTE DE CARTÃO (Imóveis em Destaque, Catálogo Casas, Imóveis Relacionados)
+  // Selo centrado por cima da imagem ("overlay"), agora num tamanho proporcional e compacto que nunca sai dos limites
   if (variant === 'card') {
     return (
       <div
-        className={`absolute inset-0 z-15 flex flex-col items-center justify-center p-6 text-center transition-all duration-500 pointer-events-none ${config.overlayDarkness} ${className}`}
+        className={`absolute inset-0 z-15 flex flex-col items-center justify-center p-3 sm:p-5 text-center transition-all duration-500 pointer-events-none ${config.overlayDarkness} ${className}`}
       >
-        {/* Headline com a fonte padrão do site (Plus Jakarta Sans) em #D6920B */}
-        <h3 className="font-sans text-3xl sm:text-4xl lg:text-[40px] font-bold uppercase tracking-[0.22em] text-[#D6920B] leading-[0.95] drop-shadow-[0_3px_12px_rgba(0,0,0,0.85)]">
-          {config.title}
-        </h3>
+        <div className="flex flex-col items-center justify-center max-w-[88%] mx-auto">
+          {/* Título de estado centrado com proporção equilibrada (sem transbordar) */}
+          <h3 className="font-sans text-base sm:text-lg md:text-xl font-bold uppercase tracking-[0.16em] sm:tracking-[0.20em] text-[#D6920B] leading-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)] whitespace-nowrap">
+            {config.title}
+          </h3>
 
-        {/* Subtitle in high-contrast tracked sans */}
-        <p className="mt-3 font-sans text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-stone-200/90 font-medium max-w-[240px] drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
-          {config.subtext}
-        </p>
+          {/* Divisor fino em ouro acentuando o design de luxo */}
+          <div
+            className="w-6 sm:w-8 h-[1px] bg-[#D6920B]/80 my-1.5 sm:my-2 shadow-sm"
+            aria-hidden="true"
+          />
+
+          {/* Subtítulo informativo em caixa alta */}
+          <p className="font-sans text-[8px] sm:text-[9px] uppercase tracking-[0.18em] sm:tracking-[0.22em] text-stone-200/90 font-medium max-w-[180px] sm:max-w-[210px] leading-tight drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
+            {config.subtext}
+          </p>
+        </div>
       </div>
     );
   }
 
-  // 2. VARIANTE HERO (Ficha Detalhada do Imóvel: Canto superior esquerdo, em pequeno)
+  // 2. VARIANTE HERO (Ficha Detalhada do Imóvel: Canto superior da fotografia principal)
   if (variant === 'hero') {
     return (
       <div
-        className={`absolute top-4 left-4 sm:top-6 sm:left-6 z-30 pointer-events-none flex items-center ${className}`}
+        className={`absolute top-3.5 left-3.5 sm:top-5 sm:left-5 z-30 pointer-events-none select-none max-w-[calc(100%-28px)] ${className}`}
       >
         <span
-          className={`inline-flex items-center px-3 py-1 text-[10px] sm:text-[11px] font-sans font-bold tracking-[0.22em] uppercase backdrop-blur-md shadow-md border ${config.badgeBg}/95 ${config.badgeBorder} ${config.badgeText}`}
+          className={`inline-flex items-center gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 font-sans text-[9.5px] sm:text-[11px] font-bold tracking-[0.18em] sm:tracking-[0.20em] uppercase backdrop-blur-md shadow-lg border ${config.badgeBg} ${config.badgeBorder} ${config.badgeText} rounded-none whitespace-nowrap`}
         >
-          {config.title}
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${config.dotColor} shrink-0 shadow-[0_0_6px_#D6920B]`}
+            aria-hidden="true"
+          />
+          <span className="truncate">{config.title}</span>
         </span>
       </div>
     );
   }
 
-  // 3. VARIANTE CORNER (Apenas a insígnia de canto)
+  // 3. VARIANTE CORNER (Modal Rápido de Imóvel e Miniaturas)
   if (variant === 'corner') {
     return (
-      <div className={`absolute top-3.5 left-3.5 z-20 pointer-events-none ${className}`}>
+      <div
+        className={`absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-20 pointer-events-none select-none max-w-[calc(100%-20px)] ${className}`}
+      >
         <span
-          className={`inline-flex items-center px-2.5 py-1 text-[10px] font-sans font-bold tracking-[0.24em] uppercase backdrop-blur-md shadow-md border ${config.badgeBg}/95 ${config.badgeBorder} ${config.badgeText}`}
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 font-sans text-[9px] sm:text-[9.5px] font-bold tracking-[0.16em] uppercase backdrop-blur-md shadow-md border ${config.badgeBg} ${config.badgeBorder} ${config.badgeText} rounded-none whitespace-nowrap`}
         >
-          {config.cornerBadge}
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${config.dotColor} shrink-0 shadow-[0_0_5px_#D6920B]`}
+            aria-hidden="true"
+          />
+          <span className="truncate">{config.title}</span>
         </span>
       </div>
     );
   }
 
-  // 4. VARIANTE BADGE (Pílula em linha, ideal para barras de resumo, tabelas e modais)
+  // 4. VARIANTE BADGE (Em linha para tabelas de características, cabeçalhos de detalhe e modais)
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1 text-[10px] sm:text-[11px] font-sans font-bold tracking-[0.22em] uppercase border shadow-sm ${config.badgeBg} ${config.badgeBorder} ${config.badgeText} ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 font-sans text-[9.5px] sm:text-[10px] font-bold tracking-[0.16em] uppercase border shadow-sm ${config.badgeBg} ${config.badgeBorder} ${config.badgeText} rounded-none whitespace-nowrap ${className}`}
     >
-      <span className="w-1.5 h-1.5 rounded-full bg-[#D6920B] animate-pulse" />
+      <span className={`w-1.5 h-1.5 rounded-full ${config.dotColor} shrink-0`} aria-hidden="true" />
       <span>{config.title}</span>
     </span>
   );

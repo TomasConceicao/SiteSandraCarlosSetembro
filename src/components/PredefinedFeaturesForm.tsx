@@ -33,7 +33,7 @@ export const PREDEFINED_FEATURES_SCHEMA: StructuredFeatureField[] = [
   // 3. Detalhes Técnicos & Áreas
   { id: 'area_util', category: 'details', label: 'Área Útil', placeholder: 'Ex: 210 m²', unit: 'm²' },
   { id: 'area_bruta', category: 'details', label: 'Área Bruta de Construção', placeholder: 'Ex: 320 m²', unit: 'm²' },
-  { id: 'area_terreno', category: 'details', label: 'Área Total do Terreno', placeholder: 'Ex: 850 m²', unit: 'm²' },
+  { id: 'area_lote', category: 'details', label: 'Área Total do Lote', placeholder: 'Ex: 850 m²', unit: 'm²' },
   { id: 'ano_construcao', category: 'details', label: 'Ano de Construção', placeholder: 'Ex: 2023' },
   { id: 'estado_conservacao', category: 'details', label: 'Estado de Conservação', placeholder: 'Ex: Novo / Impecável / Remodelado' },
   { id: 'exposicao_solar', category: 'details', label: 'Exposição Solar', placeholder: 'Ex: Nascente / Sul / Poente' },

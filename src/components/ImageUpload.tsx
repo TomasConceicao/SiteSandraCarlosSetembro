@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Upload, X, Image as ImageIcon, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Link as LinkIcon, Loader2, AlertCircle } from 'lucide-react';
+import { replaceImageInStorage, uploadImageToStorage } from '../lib/supabase';
 
 interface ImageUploadProps {
   id?: string;
@@ -8,90 +9,59 @@ interface ImageUploadProps {
   label?: string;
   placeholder?: string;
   aspectHint?: string;
+  folder?: 'properties' | 'site' | 'reviews';
 }
 
 /**
- * Redimensiona e comprime uma imagem no cliente (Canvas) para WebP/JPEG de alta qualidade,
- * garantindo carregamento ultrarrápido e sem exceder a quota do navegador.
- */
-function compressImage(file: File, maxDim = 1920, quality = 0.85): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onerror = reject;
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          resolve(e.target?.result as string);
-          return;
-        }
-        ctx.drawImage(img, 0, 0, width, height);
-        // Gera JPEG de boa qualidade
-        const compressed = canvas.toDataURL('image/jpeg', quality);
-        resolve(compressed);
-      };
-      img.src = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-/**
- * Componente que permite:
- * 1. Fazer UPLOAD direto de ficheiro de imagem com compressão automática
- * 2. Inserir ou editar URL / caminho em /public
- * 3. Pré-visualizar instantaneamente a fotografia
+ * Componente de carregamento e substituição direta de imagens no Supabase Storage.
+ * Também permite indicar um URL externo ou caminho estático da pasta /public.
  */
 export const ImageUpload: React.FC<ImageUploadProps> = ({
   id,
   value,
   onChange,
   label,
-  placeholder = 'https://... ou clique para carregar',
+  placeholder = 'https://... ou /imagem.webp',
   aspectHint,
+  folder = 'site' as const,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<'upload' | 'url'>('upload');
   const [dragOver, setDragOver] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleFileChange = async (file?: File) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      alert('Por favor selecione um ficheiro de imagem (JPG, PNG, WebP).');
+      setUploadError('Por favor selecione um ficheiro de imagem válido (JPG, PNG, WebP).');
       return;
     }
 
+    setUploadError(null);
+    setIsProcessing(true);
+
     try {
-      setIsProcessing(true);
-      const optimizedDataUrl = await compressImage(file, 1920, 0.85);
-      onChange(optimizedDataUrl);
-    } catch (err) {
-      console.error('Erro ao processar imagem:', err);
-      // Fallback para leitura direta
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        if (result) onChange(result);
-      };
-      reader.readAsDataURL(file);
+      const res = value
+        ? await replaceImageInStorage(value, file, folder)
+        : await uploadImageToStorage(file, folder);
+
+      if (res.success && res.url) {
+        onChange(res.url);
+      } else {
+        setUploadError(
+          res.error || 'Não foi possível carregar a imagem para o Supabase Storage.'
+        );
+      }
+    } catch (err: unknown) {
+      setUploadError(
+        err instanceof Error ? err.message : 'Erro ao carregar a imagem para o Storage.'
+      );
     } finally {
       setIsProcessing(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -110,49 +80,46 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         </div>
       )}
 
-      {/* Preview se já existir imagem */}
+      {uploadError && (
+        <div className="p-2 bg-red-50 border border-red-200 text-red-800 text-[11px] flex items-start gap-1.5">
+          <AlertCircle size={13} className="shrink-0 mt-0.5" />
+          <span>{uploadError}</span>
+        </div>
+      )}
+
       {value ? (
-        <div className="relative group border border-stone-300 bg-stone-100 overflow-hidden rounded-xs">
-          {/* Contexto: Imagem carregada em pré-visualização no componente de upload */}
+        <div className="relative group border border-stone-300 bg-stone-100 overflow-hidden">
           <img
             src={value}
-            alt="Pré-visualização do ficheiro de imagem selecionado"
+            alt="Pré-visualização da imagem selecionada"
             className="w-full h-40 object-cover object-center block"
             loading="lazy"
-            width="320"
-            height="160"
+            width={320}
+            height={160}
           />
           <div className="absolute inset-0 bg-stone-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
             <button
               type="button"
               disabled={isProcessing}
               onClick={() => fileInputRef.current?.click()}
-              className="px-2.5 py-1 bg-white text-stone-900 text-[11px] font-semibold uppercase tracking-wider hover:bg-[#d8be9e] transition-colors cursor-pointer"
+              className="px-2.5 py-1 bg-white text-stone-900 text-[11px] font-semibold uppercase tracking-wider hover:bg-[#d8be9e] transition-colors cursor-pointer disabled:opacity-60"
             >
-              {isProcessing ? 'A carregar...' : 'Trocar Foto'}
+              {isProcessing ? 'A enviar...' : 'Trocar no Storage'}
             </button>
             <button
               type="button"
               onClick={() => onChange('')}
               className="p-1 bg-red-600 text-white hover:bg-red-700 transition-colors cursor-pointer"
-              title="Remover imagem"
+              title="Limpar imagem"
             >
               <X size={15} />
             </button>
           </div>
-          <div className="px-2 py-1 bg-white/90 border-t border-stone-200 text-[10px] text-stone-600 truncate font-mono flex items-center justify-between">
-            <span className="truncate">
-              {value.startsWith('data:') ? 'Imagem carregada (Upload direto)' : value}
-            </span>
-            {value.startsWith('/public') || value.startsWith('/') && !value.startsWith('data:') && (
-              <span className="text-[9px] bg-stone-200 px-1 py-0.2 uppercase font-semibold text-stone-700 shrink-0 ml-1">
-                Ficheiro /public
-              </span>
-            )}
+          <div className="px-2 py-1 bg-white/95 border-t border-stone-200 text-[10px] text-stone-600 truncate font-mono flex items-center justify-between">
+            <span className="truncate">{value}</span>
           </div>
         </div>
       ) : (
-        /* Zona de Carregamento / Upload */
         <div
           onDragOver={(e) => {
             e.preventDefault();
@@ -171,14 +138,20 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
               ? 'border-[#36210f] bg-stone-100'
               : 'border-stone-300 bg-[#faf8f5] hover:border-stone-400'
           }`}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => !isProcessing && fileInputRef.current?.click()}
         >
           <div className="flex flex-col items-center justify-center gap-1.5 pointer-events-none">
             <div className="w-9 h-9 rounded-full bg-stone-200/80 flex items-center justify-center text-stone-600">
-              {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+              {isProcessing ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Upload size={16} />
+              )}
             </div>
             <span className="text-xs font-semibold text-[#36210f]">
-              {isProcessing ? 'A otimizar e carregar fotografia...' : 'Clique para carregar fotografia'}
+              {isProcessing
+                ? 'A otimizar e carregar para Supabase Storage...'
+                : 'Clique para enviar para Supabase Storage'}
             </span>
             <span className="text-[10px] text-stone-500">
               ou arraste o ficheiro para aqui (JPG, PNG, WebP)
@@ -187,7 +160,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         </div>
       )}
 
-      {/* Input oculto de ficheiro */}
       <input
         ref={fileInputRef}
         type="file"
@@ -200,7 +172,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         }}
       />
 
-      {/* Alternar opcionalmente para modo URL */}
       <div className="flex items-center justify-between text-[11px] text-stone-500 pt-0.5">
         <button
           type="button"
@@ -210,12 +181,12 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           {mode === 'upload' ? (
             <>
               <LinkIcon size={12} />
-              <span>Ou inserir caminho do ficheiro (ex: /pagina_imoveis_2.png)</span>
+              <span>Ou inserir URL / caminho /public</span>
             </>
           ) : (
             <>
               <ImageIcon size={12} />
-              <span>Voltar ao upload direto</span>
+              <span>Voltar ao upload Supabase Storage</span>
             </>
           )}
         </button>

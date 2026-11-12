@@ -14,46 +14,88 @@ import { PropertyDetailPage } from './pages/PropertyDetailPage';
 import { HomePage } from './pages/HomePage';
 import { AboutPage } from './pages/AboutPage';
 import { HousesPage } from './pages/HousesPage';
-import { TipsPage } from './pages/TipsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { AdminPage } from './pages/AdminPage';
-import { TipArticleModal } from './components/TipArticleModal';
+import { LoginPage } from './pages/LoginPage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { TermsPage } from './pages/TermsPage';
 import { FloatingContactWidget } from './components/FloatingContactWidget';
-import { PageType, Property, TipArticle } from './types';
+import { PageType, Property } from './types';
 import { applySEO, applyPropertySEO } from './utils/seo';
 import { DataProvider, useData } from './context/DataContext';
+import { generateSlug, getPropertyPath } from './utils/slug';
+import { trackPageView, getCookieConsentStatus } from './utils/analytics';
 
 function AppContent() {
-  const { properties } = useData();
+  const { properties, authLoading, isAuthenticated, aal } = useData();
   const [currentPage, setCurrentPage] = useState<PageType>('home');
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isCookiesOpen, setIsCookiesOpen] = useState(false);
+  const [isFloatingContactOpen, setIsFloatingContactOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [selectedArticle, setSelectedArticle] = useState<TipArticle | null>(null);
 
   // Helper to parse route from pathname or hash
   const parseCurrentRoute = (): { page: PageType; shouldScrollContact?: boolean; propertyId?: string } => {
     const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
     const hash = window.location.hash.replace('#', '').toLowerCase();
     const searchParams = new URLSearchParams(window.location.search);
-    const propertyId = searchParams.get('id') || undefined;
+    const legacyPropertyId = searchParams.get('id') || undefined;
 
-    // Priority 1: Check clean path
+    // Priority 1: Check semantic clean path /imoveis/:slug or legacy /casas/:slug
+    if (path.startsWith('imoveis/')) {
+      const slug = path.replace(/^imoveis\//, '').trim();
+      if (slug) {
+        return { page: 'imoveis', propertyId: slug };
+      }
+    }
+    if (path.startsWith('casas/')) {
+      const slug = path.replace(/^casas\//, '').trim();
+      if (slug) {
+        // Redirecionamento 301 client-side: atualiza URL no browser para /imoveis/:slug
+        window.history.replaceState({ page: 'imoveis', propertyId: slug }, '', `/imoveis/${slug}`);
+        return { page: 'imoveis', propertyId: slug };
+      }
+    }
+
+    // Priority 2: Check standard clean paths
+    if (path === 'login') return { page: 'login' };
     if (path === 'admin') return { page: 'admin' };
+    if (path === 'politica-de-privacidade' || path === 'privacidade') return { page: 'privacidade' };
+    if (path === 'termos-e-condicoes' || path === 'termos') return { page: 'termos' };
     if (path === 'sobre' || path === 'sobre-mim') return { page: 'sobre', shouldScrollContact: hash === 'contatos' || hash === 'contacto' };
-    if (path === 'casas') return { page: 'casas', shouldScrollContact: hash === 'contatos' || hash === 'contacto', propertyId };
+    if (path === 'imoveis') return { page: 'imoveis', shouldScrollContact: hash === 'contatos' || hash === 'contacto', propertyId: legacyPropertyId };
+    if (path === 'casas') {
+      // Redirecionamento 301 client-side: atualiza URL no browser para /imoveis
+      window.history.replaceState({ page: 'imoveis' }, '', '/imoveis');
+      return { page: 'imoveis', shouldScrollContact: hash === 'contatos' || hash === 'contacto', propertyId: legacyPropertyId };
+    }
     if (path === 'contacto' || path === 'contatos') return { page: 'home', shouldScrollContact: true };
     if (path === '404') return { page: '404' };
 
-    // Priority 2: Check hash for deep links
+    // Priority 3: Check hash for deep links
+    if (hash.startsWith('imoveis/')) {
+      const slug = hash.replace(/^imoveis\//, '').trim();
+      if (slug) {
+        return { page: 'imoveis', propertyId: slug };
+      }
+    }
+    if (hash.startsWith('casas/')) {
+      const slug = hash.replace(/^casas\//, '').trim();
+      if (slug) {
+        return { page: 'imoveis', propertyId: slug };
+      }
+    }
+    if (hash === 'login') return { page: 'login' };
     if (hash === 'admin') return { page: 'admin' };
-    if (hash === 'casas') return { page: 'casas', propertyId };
+    if (hash === 'politica-de-privacidade' || hash === 'privacidade') return { page: 'privacidade' };
+    if (hash === 'termos-e-condicoes' || hash === 'termos') return { page: 'termos' };
+    if (hash === 'imoveis' || hash === 'casas') return { page: 'imoveis', propertyId: legacyPropertyId };
     if (hash === 'sobre' || hash === 'sobre-mim') return { page: 'sobre' };
     if (hash === 'contatos' || hash === 'contacto') return { page: 'home', shouldScrollContact: true };
     if (hash === '404') return { page: '404' };
 
     // Root path
-    if (path === '' || path === 'home') return { page: 'home', shouldScrollContact: hash === 'contatos' || hash === 'contacto', propertyId };
+    if (path === '' || path === 'home') return { page: 'home', shouldScrollContact: hash === 'contatos' || hash === 'contacto', propertyId: legacyPropertyId };
 
     // Unrecognized URL -> 404
     return { page: '404' };
@@ -66,18 +108,32 @@ function AppContent() {
     }
   }, []);
 
+  const propertiesRef = React.useRef(properties);
+  useEffect(() => {
+    propertiesRef.current = properties;
+  }, [properties]);
+
   // Sync route on mount and browser popstate (Back/Forward buttons)
   useEffect(() => {
-    const syncRoute = () => {
+    const syncRoute = (isPopState = false) => {
       const { page, shouldScrollContact, propertyId } = parseCurrentRoute();
       setCurrentPage(page);
       applySEO(page);
 
       if (propertyId) {
-        const found = properties.find((p) => p.id === propertyId);
+        const found = propertiesRef.current.find(
+          (p) => p.id === propertyId || generateSlug(p.id) === generateSlug(propertyId)
+        );
         if (found) {
           setSelectedProperty(found);
           applyPropertySEO(found);
+
+          // Redirecionamento/compatibilidade automática: se alguém aceder pelo formato antigo (?id=:slug) ou /casas,
+          // atualiza o histórico/URL para a rota canónica limpa /imoveis/:slug
+          if (window.location.search.includes('id=') || window.location.pathname.startsWith('/casas')) {
+            const cleanPath = getPropertyPath(found.id);
+            window.history.replaceState({ page: 'imoveis', propertyId: found.id }, '', cleanPath);
+          }
         } else {
           setSelectedProperty(null);
           applySEO(page);
@@ -92,49 +148,78 @@ function AppContent() {
           const el = document.getElementById('contatos');
           if (el) el.scrollIntoView({ behavior: 'smooth' });
         }, 150);
-      } else {
+      } else if (isPopState) {
+        // Apenas repõe o scroll no topo se foi uma navegação real de avançar/recuar no browser
         window.scrollTo(0, 0);
       }
+
+      // Dispara o pageview virtual para GA4 / GTM na navegação SPA
+      trackPageView(document.title, window.location.pathname);
     };
 
-    syncRoute();
-    window.addEventListener('popstate', syncRoute);
-    window.addEventListener('hashchange', syncRoute);
+    // Executa a sincronização inicial na montagem da app (apenas posiciona no topo na carga inicial)
+    syncRoute(false);
+
+    const onPopOrHashChange = () => syncRoute(true);
+    window.addEventListener('popstate', onPopOrHashChange);
+    window.addEventListener('hashchange', onPopOrHashChange);
 
     return () => {
-      window.removeEventListener('popstate', syncRoute);
-      window.removeEventListener('hashchange', syncRoute);
+      window.removeEventListener('popstate', onPopOrHashChange);
+      window.removeEventListener('hashchange', onPopOrHashChange);
     };
+  }, []);
+
+  // Quando as propriedades forem carregadas ou atualizadas da base de dados/Supabase em segundo plano,
+  // apenas atualiza o selectedProperty SE a rota atual for um detalhe de imóvel (/imoveis/:slug),
+  // sem NUNCA reiniciar o scroll do utilizador!
+  useEffect(() => {
+    const { propertyId } = parseCurrentRoute();
+    if (propertyId && properties.length > 0) {
+      const found = properties.find(
+        (p) => p.id === propertyId || generateSlug(p.id) === generateSlug(propertyId)
+      );
+      if (found) {
+        setSelectedProperty((prev) => (prev?.id === found.id ? prev : found));
+      }
+    }
   }, [properties]);
 
-  // Ensure scroll is at the absolute top whenever currentPage changes (including AnimatePresence transitions)
+  // Ensure scroll is at the absolute top ONLY when currentPage actually changes between different pages
+  const prevPageRef = React.useRef<PageType | null>(null);
   useEffect(() => {
     if (currentPage === 'contacto') return;
 
-    const resetScroll = () => {
+    if (prevPageRef.current !== null && prevPageRef.current !== currentPage) {
       window.scrollTo(0, 0);
       if (document.documentElement) document.documentElement.scrollTop = 0;
       if (document.body) document.body.scrollTop = 0;
-    };
-
-    resetScroll();
-    const rafId = requestAnimationFrame(resetScroll);
-    const t1 = setTimeout(resetScroll, 100);
-    const t2 = setTimeout(resetScroll, 420);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
+    }
+    prevPageRef.current = currentPage;
   }, [currentPage]);
+
+  // Apresentação proativa de consentimento de cookies na primeira visita (RGPD)
+  useEffect(() => {
+    const consent = getCookieConsentStatus();
+    if (!consent) {
+      const timer = setTimeout(() => {
+        setIsCookiesOpen(true);
+      }, 700);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const handleNavigate = (page: PageType) => {
     setSelectedProperty(null);
     setCurrentPage(page);
     applySEO(page);
 
-    const newPath = page === 'home' ? '/' : `/${page}`;
+    let newPath = '/';
+    if (page === 'home') newPath = '/';
+    else if (page === 'privacidade') newPath = '/politica-de-privacidade';
+    else if (page === 'termos') newPath = '/termos-e-condicoes';
+    else newPath = `/${page}`;
+
     if (window.location.pathname !== newPath) {
       window.history.pushState({ page }, '', newPath);
     }
@@ -145,24 +230,12 @@ function AppContent() {
   };
 
   const handleScrollToContact = () => {
-    const scrollToContactSection = () => {
-      if (currentPage === 'home' || currentPage === 'contacto') {
-        const homeSection = document.getElementById('home-contatos-section');
-        if (homeSection) {
-          homeSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          return;
-        }
-      }
+    if (selectedProperty) {
+      setSelectedProperty(null);
+    }
 
-      const el = document.getElementById('contatos');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    };
-
-    scrollToContactSection();
-    setTimeout(scrollToContactSection, 60);
-    setTimeout(scrollToContactSection, 180);
+    // Abre exclusivamente o botão/card flutuante de contacto no canto inferior
+    setIsFloatingContactOpen(true);
   };
 
   const handleOpenContact = () => {
@@ -171,24 +244,56 @@ function AppContent() {
 
   const handleSelectProperty = (property: Property) => {
     setSelectedProperty(property);
-    setCurrentPage('casas');
+    setCurrentPage('imoveis');
     applyPropertySEO(property);
-    const newPath = `/casas?id=${property.id}`;
-    if (window.location.pathname + window.location.search !== newPath) {
-      window.history.pushState({ page: 'casas', propertyId: property.id }, '', newPath);
+    const newPath = getPropertyPath(property.id);
+    if (window.location.pathname !== newPath) {
+      window.history.pushState({ page: 'imoveis', propertyId: property.id }, '', newPath);
     }
     window.scrollTo(0, 0);
   };
 
   const handleBackFromProperty = () => {
     setSelectedProperty(null);
-    applySEO('casas');
-    window.history.pushState({ page: 'casas' }, '', '/casas');
+    setCurrentPage('imoveis');
+    applySEO('imoveis');
+    window.history.pushState({ page: 'imoveis' }, '', '/imoveis');
     window.scrollTo(0, 0);
   };
 
-  // If viewing admin page, render the Admin dashboard directly
+  // Redireciona /admin para /login sempre que a sessão não for AAL2
+  useEffect(() => {
+    if (!authLoading && currentPage === 'admin' && (!isAuthenticated || aal !== 'aal2')) {
+      setCurrentPage('login');
+      applySEO('login');
+      if (window.location.pathname !== '/login') {
+        window.history.replaceState({ page: 'login' }, '', '/login');
+      }
+    }
+  }, [authLoading, currentPage, isAuthenticated, aal]);
+
+  // Se estiver na rota /login, renderiza a página de login + 2FA
+  if (currentPage === 'login') {
+    return <LoginPage onNavigate={handleNavigate} />;
+  }
+
+  // Rota /admin estritamente protegida por sessão AAL2
   if (currentPage === 'admin') {
+    if (authLoading) {
+      return (
+        <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center p-6 text-stone-700">
+          <div className="text-center space-y-3">
+            <div className="w-6 h-6 border-2 border-[#36210f] border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-xs uppercase tracking-[0.2em]">A validar sessão AAL2...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (!isAuthenticated || aal !== 'aal2') {
+      return <LoginPage onNavigate={handleNavigate} />;
+    }
+
     return (
       <AdminPage
         onNavigate={handleNavigate}
@@ -265,9 +370,9 @@ function AppContent() {
                 </motion.div>
               )}
 
-              {currentPage === 'casas' && (
+              {currentPage === 'imoveis' && (
                 <motion.div
-                  key="casas"
+                  key="imoveis"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -278,6 +383,30 @@ function AppContent() {
                     onOpenContact={handleOpenContact}
                     onNavigate={handleNavigate}
                   />
+                </motion.div>
+              )}
+
+              {currentPage === 'privacidade' && (
+                <motion.div
+                  key="privacidade"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <PrivacyPolicyPage onNavigate={handleNavigate} />
+                </motion.div>
+              )}
+
+              {currentPage === 'termos' && (
+                <motion.div
+                  key="termos"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <TermsPage onNavigate={handleNavigate} />
                 </motion.div>
               )}
 
@@ -346,6 +475,8 @@ function AppContent() {
       {/* Widget Flutuante de Contacto e WhatsApp */}
       {!selectedProperty && (
         <FloatingContactWidget
+          isOpen={isFloatingContactOpen}
+          onOpenChange={setIsFloatingContactOpen}
           onOpenContact={handleOpenContact}
         />
       )}
@@ -354,17 +485,16 @@ function AppContent() {
       <ContactModal
         isOpen={isContactOpen}
         onClose={() => setIsContactOpen(false)}
+        onOpenPrivacy={() => {
+          setIsContactOpen(false);
+          handleNavigate('privacidade');
+        }}
       />
 
       <CookieModal
         isOpen={isCookiesOpen}
         onClose={() => setIsCookiesOpen(false)}
-      />
-
-      <TipArticleModal
-        article={selectedArticle}
-        onClose={() => setSelectedArticle(null)}
-        onOpenContact={handleOpenContact}
+        onNavigate={handleNavigate}
       />
     </div>
   );

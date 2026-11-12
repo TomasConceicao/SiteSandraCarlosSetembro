@@ -67,6 +67,20 @@ export function initImageProtection(): void {
     }
   };
 
+  // Helper to safely extract HTMLImageElement from any EventTarget without throwing TypeError
+  const findImageFromTarget = (target: EventTarget | null): HTMLImageElement | null => {
+    if (!target) return null;
+    const element =
+      target instanceof Element
+        ? target
+        : target instanceof Node && target.parentElement
+        ? target.parentElement
+        : null;
+    if (!element || typeof element.closest !== 'function') return null;
+    const found = element.closest('img');
+    return found instanceof HTMLImageElement ? found : null;
+  };
+
   /**
    * 1. Mouse down with Right Click (button === 2)
    * Fires BEFORE contextmenu opens, so browser captures the white data URL
@@ -76,9 +90,8 @@ export function initImageProtection(): void {
     (e: MouseEvent) => {
       if (e.button === 2) {
         // Right click
-        const target = e.target as HTMLElement | null;
-        const img = target?.closest('img');
-        if (img instanceof HTMLImageElement) {
+        const img = findImageFromTarget(e.target);
+        if (img) {
           swapToWhite(img);
         }
       }
@@ -92,9 +105,8 @@ export function initImageProtection(): void {
   document.addEventListener(
     'contextmenu',
     (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      const img = target?.closest('img');
-      if (img instanceof HTMLImageElement) {
+      const img = findImageFromTarget(e.target);
+      if (img) {
         swapToWhite(img);
       }
     },
@@ -108,9 +120,8 @@ export function initImageProtection(): void {
   document.addEventListener(
     'dragstart',
     (e: DragEvent) => {
-      const target = e.target as HTMLElement | null;
-      const img = target?.closest('img');
-      if (img instanceof HTMLImageElement) {
+      const img = findImageFromTarget(e.target);
+      if (img) {
         swapToWhite(img);
       }
     },
@@ -124,9 +135,8 @@ export function initImageProtection(): void {
   document.addEventListener(
     'touchstart',
     (e: TouchEvent) => {
-      const target = e.target as HTMLElement | null;
-      const img = target?.closest('img');
-      if (img instanceof HTMLImageElement) {
+      const img = findImageFromTarget(e.target);
+      if (img) {
         touchTimer = setTimeout(() => {
           swapToWhite(img);
         }, 350); // Typical long-press threshold on mobile
@@ -155,8 +165,19 @@ export function initImageProtection(): void {
       const selection = window.getSelection();
       if (!selection || selection.rangeCount === 0) return;
       const container = selection.getRangeAt(0).commonAncestorContainer;
-      const element = container.nodeType === Node.ELEMENT_NODE ? (container as HTMLElement) : container.parentElement;
-      const img = element?.querySelector('img') || element?.closest('img');
+      const element =
+        container instanceof Element
+          ? container
+          : container instanceof Node && container.parentElement
+          ? container.parentElement
+          : null;
+      if (!element) return;
+      const img =
+        typeof element.querySelector === 'function'
+          ? element.querySelector('img')
+          : typeof element.closest === 'function'
+          ? element.closest('img')
+          : null;
       if (img instanceof HTMLImageElement) {
         if (e.clipboardData) {
           e.clipboardData.setData('text/plain', '');

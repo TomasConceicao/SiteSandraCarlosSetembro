@@ -82,27 +82,25 @@ As fontes estão configuradas em `index.html` e `src/index.css`:
 │   ├── main.tsx                     # Ponto de montagem React
 │   ├── App.tsx                      # Orquestrador de estado global, rotas e modais
 │   ├── index.css                    # Tailwind CSS v4, animação dinâmica do cabeçalho
-│   ├── types.ts                     # Interfaces TypeScript (Property, TipArticle, etc.)
+│   ├── types.ts                     # Interfaces TypeScript (Property, etc.)
 │   ├── components/                  # Componentes reutilizáveis
 │   │   ├── Header.tsx               # Cabeçalho com logo dinâmico reativo ao scroll
 │   │   ├── Footer.tsx               # Rodapé com contactos, AMI 15766 e logos parceiros
 │   │   ├── ContactModal.tsx         # Modal de contacto com formulário direto
 │   │   ├── CookieModal.tsx          # Gestão de cookies e consentimento
+│   │   ├── FloatingContactWidget.tsx # Widget flutuante de contacto rápido (WhatsApp/Telefone)
 │   │   ├── FeaturedPropertiesSection.tsx # Secção de imóveis em destaque na Home
-│   │   ├── FeaturedSelectorModal.tsx     # Seletor administrativo de destaques
-│   │   ├── PropertyMap.tsx          # Mapa Leaflet integrado
-│   │   ├── PropertyModal.tsx        # Modal rápido de visualização de imóvel
-│   │   └── TipArticleModal.tsx      # Modal de leitura de artigos/dicas
+│   │   ├── PropertyStatusOverlay.tsx # Selos de estado ("RESERVADO", "VENDIDO", "NOVIDADE")
+│   │   ├── Breadcrumb.tsx           # Navegação estruturada Breadcrumb com Microdados e Schema.org
+│   │   └── PropertyMap.tsx          # Mapa Leaflet integrado
 │   ├── pages/                       # Vistas principais
 │   │   ├── HomePage.tsx             # Página inicial com hero, biografia, destaques
 │   │   ├── HousesPage.tsx           # Catálogo completo de imóveis com filtros
 │   │   ├── PropertyDetailPage.tsx   # Ficha completa e detalhada do imóvel
 │   │   ├── AboutPage.tsx            # Página biográfica "Sobre Mim"
-│   │   ├── TipsPage.tsx             # Dicas e artigos (temporariamente desativado)
 │   │   └── NotFoundPage.tsx         # Página 404 personalizada
 │   ├── data/
-│   │   ├── properties.ts            # Base de dados de imóveis estruturada
-│   │   └── tipsData.ts              # Artigos imobiliários e guias
+│   │   └── properties.ts            # Base de dados de imóveis estruturada
 │   └── utils/
 │       ├── featuredManager.ts       # Gestão de imóveis em destaque (localStorage)
 │       ├── imageProtection.ts       # Script de proteção de cópia de imagens
@@ -115,8 +113,8 @@ As fontes estão configuradas em `index.html` e `src/index.css`:
 
 - Roteamento SPA nativo sem recarregamento de página via History API:
   - `/` ou `home` → `HomePage`
-  - `/casas` → `HousesPage` (catálogo geral de imóveis)
-  - `/casas?id=:propertyId` → `PropertyDetailPage` (quando `selectedProperty !== null`)
+  - `/casas` → `HousesPage` (catálogo geral de imóveis com canónica estrita em `/casas`)
+  - `/casas/:slug` → `PropertyDetailPage` (ficha completa do imóvel com slug semântico limpo; suporte e redirecionamento automático de `/casas?id=:slug`)
   - `/sobre` ou `/sobre-mim` → `AboutPage`
   - `/contatos` ou `#contatos` → Scroll suave para secção de contactos
 - Sempre que a rota muda, o scroll é forçado instantaneamente para o topo (`window.scrollTo(0, 0)`).

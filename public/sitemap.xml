@@ -1,30 +1,106 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+  <!-- ==========================================
+       PÁGINAS INSTITUCIONAIS
+       ========================================== -->
   <url>
-    <loc>https://sandracarlos.pt/</loc>
-    <lastmod>2026-09-02</lastmod>
+    <loc>https://www.sandracarlos.pt/</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+
   <url>
-    <loc>https://sandracarlos.pt/sobre</loc>
-    <lastmod>2026-09-02</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://sandracarlos.pt/casas</loc>
-    <lastmod>2026-09-02</lastmod>
+    <loc>https://www.sandracarlos.pt/imoveis</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
+
   <url>
-    <loc>https://sandracarlos.pt/contacto</loc>
-    <lastmod>2026-09-02</lastmod>
+    <loc>https://www.sandracarlos.pt/sobre</loc>
+    <lastmod>2026-09-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- ==========================================
+       IMÓVEIS CONSTRUÍDOS ATIVOS (FICHAS TÉCNICAS)
+       ========================================== -->
+  <url>
+    <loc>https://www.sandracarlos.pt/imoveis/moradia-pombal-centro</loc>
+    <lastmod>2026-09-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&amp;fit=crop&amp;fm=webp&amp;w=1600&amp;q=85</image:loc>
+      <image:title>Moradia Contemporânea com Jardim em Pombal Centro - Sandra Carlos</image:title>
+      <image:caption>Moradia unifamiliar T4 contemporânea com piscina e jardim no centro de Pombal</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.sandracarlos.pt/imoveis/apartamento-centro-pombal</loc>
+    <lastmod>2026-09-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&amp;fit=crop&amp;fm=webp&amp;w=1600&amp;q=85</image:loc>
+      <image:title>Apartamento T3 Renovado em Pombal Centro - Sandra Carlos</image:title>
+      <image:caption>Apartamento T3 com remodelação de luxo e varandas panorâmicas no centro de Pombal</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.sandracarlos.pt/imoveis/moradia-touriscal-pombal</loc>
+    <lastmod>2026-09-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&amp;fit=crop&amp;fm=webp&amp;w=1600&amp;q=85</image:loc>
+      <image:title>Moradia Familiar com Piscina no Louriçal, Pombal - Sandra Carlos</image:title>
+      <image:caption>Moradia isolada T4 com piscina privativa e espaço exterior ajardinado no Louriçal</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.sandracarlos.pt/imoveis/quinta-redinha-pombal</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1600607687644-c7171b42498b?auto=format&amp;fit=crop&amp;fm=webp&amp;w=1600&amp;q=85</image:loc>
+      <image:title>Quinta Senhorial de Cantaria na Redinha, Pombal - Sandra Carlos</image:title>
+      <image:caption>Propriedade senhorial de cantaria com vista panorâmica sobre o vale de Sicó</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.sandracarlos.pt/imoveis/moradia-meirinhas-pombal</loc>
+    <lastmod>2026-09-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1600585154363-67eb9e2e2099?auto=format&amp;fit=crop&amp;fm=webp&amp;w=1600&amp;q=85</image:loc>
+      <image:title>Moradia Térrea T3 em Meirinhas, Pombal - Sandra Carlos</image:title>
+      <image:caption>Moradia nova de piso térreo com alpendre coberto e máxima acessibilidade</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.sandracarlos.pt/imoveis/moradia-pelariga-pombal</loc>
+    <lastmod>2026-09-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-160058515526-990dced4db0d?auto=format&amp;fit=crop&amp;fm=webp&amp;w=1600&amp;q=85</image:loc>
+      <image:title>Moradia com Vista Desafogada na Pelariga, Pombal - Sandra Carlos</image:title>
+      <image:caption>Moradia unifamiliar com lareira nobre e vistas desafogadas na Pelariga</image:caption>
+    </image:image>
   </url>
 </urlset>

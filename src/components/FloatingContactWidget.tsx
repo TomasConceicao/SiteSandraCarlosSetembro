@@ -1,20 +1,63 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Phone, Mail, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { trackWhatsAppClick, trackPhoneCallClick } from '../utils/analytics';
+import { useData } from '../context/DataContext';
 
 interface FloatingContactWidgetProps {
   onOpenContact: () => void;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const FloatingContactWidget: React.FC<FloatingContactWidgetProps> = ({
   onOpenContact,
+  isOpen: externalIsOpen,
+  onOpenChange,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const { siteSettings } = useData();
+  const { config, photos } = siteSettings;
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+
+  const setIsOpen = (value: boolean | ((prev: boolean) => boolean)) => {
+    const nextVal = typeof value === 'function' ? value(isOpen) : value;
+    if (onOpenChange) {
+      onOpenChange(nextVal);
+    }
+    setInternalIsOpen(nextVal);
+  };
+
   const [showBalloon, setShowBalloon] = useState(true);
   const widgetRef = useRef<HTMLDivElement>(null);
+  const balloonTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const whatsappUrl = `https://wa.me/351965881547?text=${encodeURIComponent(
-    'Olá Sandra Carlos, gostaria de obter mais informações sobre os seus serviços imobiliários.'
+  // Auto-oculta o balão de contacto após 5 segundos
+  useEffect(() => {
+    balloonTimerRef.current = setTimeout(() => {
+      setShowBalloon(false);
+    }, 5000);
+
+    return () => {
+      if (balloonTimerRef.current) {
+        clearTimeout(balloonTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShowBalloon(false);
+      if (balloonTimerRef.current) {
+        clearTimeout(balloonTimerRef.current);
+      }
+    }
+  }, [isOpen]);
+
+  const whatsappDigits = config.whatsappNumber.replace(/\D/g, '');
+  const telHref = `tel:+${whatsappDigits}`;
+  const whatsappUrl = `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
+    `Olá ${config.consultantName}, gostaria de obter mais informações sobre os seus serviços imobiliários.`
   )}`;
 
   // Fecha ao clicar fora do widget
@@ -88,8 +131,14 @@ export const FloatingContactWidget: React.FC<FloatingContactWidgetProps> = ({
             <div className="relative w-20 h-20 sm:w-22 sm:h-22 rounded-full overflow-hidden mb-3.5 border-2 border-[#c5ab8d] shadow-md">
               {/* Contexto: Retrato da consultora Sandra Carlos no widget de contacto flutuante e WhatsApp */}
               <img
-                src="https://SEU-DOMINIO-AQUI/sandra-carlos-consultora-imobiliaria-pombal.webp"
-                alt="Sandra Carlos - Consultora Imobiliária em Pombal e Portugal"
+                src={photos.sandraPortrait}
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.src.includes('/sandra.jpg')) {
+                    target.src = '/sandra.jpg';
+                  }
+                }}
+                alt={`${config.consultantName} - Consultora Imobiliária em Pombal e Portugal`}
                 className="w-full h-full object-cover object-[center_21%]"
                 loading="lazy"
                 width="88"
@@ -99,11 +148,11 @@ export const FloatingContactWidget: React.FC<FloatingContactWidgetProps> = ({
 
             {/* Nome e Cargo em tons castanho chocolate */}
             <h3 className="font-sans text-base sm:text-lg font-bold uppercase tracking-[0.16em] text-[#36210f]">
-              SANDRA CARLOS
+              {config.consultantName.toUpperCase()}
             </h3>
             <div className="mt-1 mb-5 flex flex-col items-center">
               <p className="font-sans text-[11px] sm:text-xs text-[#6b5142] font-normal tracking-wider">
-                Consultora Imobiliária Expertimo
+                Consultora Imobiliária {config.partnerNetwork}
               </p>
               <p className="font-sans text-[10px] sm:text-[11px] text-[#b87d1d] font-semibold tracking-[0.16em] uppercase mt-0.5">
                 Agente Pro
@@ -118,7 +167,10 @@ export const FloatingContactWidget: React.FC<FloatingContactWidgetProps> = ({
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  trackWhatsAppClick('widget_flutuante');
+                  setIsOpen(false);
+                }}
                 className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs uppercase tracking-[0.16em] font-semibold transition-colors rounded-sm shadow-xs cursor-pointer"
               >
                 <MessageCircle size={16} className="text-white" />
@@ -143,11 +195,12 @@ export const FloatingContactWidget: React.FC<FloatingContactWidgetProps> = ({
             <div className="w-full pt-3.5 mt-3.5 border-t border-[#c5ab8d]/50 flex items-center justify-center">
               <a
                 id="floating-phone-btn"
-                href="tel:+351965881547"
+                href={telHref}
+                onClick={() => trackPhoneCallClick('widget_flutuante')}
                 className="inline-flex items-center justify-center gap-2 text-[#36210f] hover:text-[#b87d1d] transition-colors text-xs sm:text-sm font-sans tracking-wide py-0.5 font-medium"
               >
                 <Phone size={14} className="text-[#b87d1d]" />
-                <span>+351 965 881 547</span>
+                <span>{config.phoneDisplay}</span>
               </a>
             </div>
           </motion.div>
@@ -165,6 +218,18 @@ export const FloatingContactWidget: React.FC<FloatingContactWidgetProps> = ({
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             className="relative mb-2 mr-1 flex items-start gap-2.5 bg-[#f5efe8] text-stone-900 py-2.5 pl-3 pr-2.5 rounded-lg shadow-[0_8px_24px_rgba(54,33,15,0.14)] border border-[#c5ab8d] cursor-pointer max-w-[240px] sm:max-w-[260px] group"
             onClick={() => setIsOpen(true)}
+            onMouseEnter={() => {
+              if (balloonTimerRef.current) {
+                clearTimeout(balloonTimerRef.current);
+              }
+            }}
+            onMouseLeave={() => {
+              if (showBalloon && !isOpen) {
+                balloonTimerRef.current = setTimeout(() => {
+                  setShowBalloon(false);
+                }, 2000);
+              }
+            }}
             role="button"
             tabIndex={0}
             aria-label="Abrir conversa com a Sandra"
@@ -173,8 +238,14 @@ export const FloatingContactWidget: React.FC<FloatingContactWidgetProps> = ({
             <div className="relative shrink-0 mt-0.5">
               {/* Contexto: Miniatura da Sandra Carlos no balão de ajuda e contacto direto */}
               <img
-                src="https://SEU-DOMINIO-AQUI/sandra-carlos-consultora-imobiliaria-pombal.webp"
-                alt="Sandra Carlos - Consultora Imobiliária"
+                src={photos.sandraPortrait}
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.src.includes('/sandra.jpg')) {
+                    target.src = '/sandra.jpg';
+                  }
+                }}
+                alt={`${config.consultantName} - Consultora Imobiliária`}
                 className="w-7 h-7 rounded-full object-cover object-[center_21%] border border-[#c5ab8d]"
                 loading="lazy"
                 width="28"
@@ -198,6 +269,9 @@ export const FloatingContactWidget: React.FC<FloatingContactWidgetProps> = ({
               id="floating-balloon-close-btn"
               onClick={(e) => {
                 e.stopPropagation();
+                if (balloonTimerRef.current) {
+                  clearTimeout(balloonTimerRef.current);
+                }
                 setShowBalloon(false);
               }}
               className="text-[#8c7362] hover:text-[#36210f] p-0.5 rounded transition-colors cursor-pointer shrink-0 mt-0.5"
@@ -206,7 +280,7 @@ export const FloatingContactWidget: React.FC<FloatingContactWidgetProps> = ({
               <X size={13} strokeWidth={2} />
             </button>
 
-            {/* Triângulo / Seta do balão a apontar para a bola */}
+            {/* Triângulo / Seta do balão a apontar para a bola no canto inferior direito */}
             <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-[#f5efe8] border-r border-b border-[#c5ab8d] rotate-45" />
           </motion.div>
         )}

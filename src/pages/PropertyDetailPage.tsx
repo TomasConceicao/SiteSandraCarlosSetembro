@@ -23,12 +23,17 @@ import {
   Facebook,
   Instagram,
   Link2,
-  ArrowDown
+  ArrowDown,
+  ArrowUp,
 } from 'lucide-react';
 import { Property, PageType } from '../types';
 import { PropertyMap } from '../components/PropertyMap';
 import { PropertyStatusOverlay } from '../components/PropertyStatusOverlay';
+import { Breadcrumb } from '../components/Breadcrumb';
 import { useData } from '../context/DataContext';
+import { getPropertyPath } from '../utils/slug';
+import { getPropertyImageAlt, getSimilarProperties } from '../utils/imageSeo';
+import { trackWhatsAppClick, trackPhoneCallClick } from '../utils/analytics';
 
 const heroSlideVariants = {
   enter: (direction: number) => ({
@@ -86,8 +91,16 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
   const [relatedSlideIndex, setRelatedSlideIndex] = useState(0);
   const [relatedDirection, setRelatedDirection] = useState<1 | -1>(1);
 
-  // Mobile floating button "Contactar a Sandra" tracking state & refs
-  const [showMobileContactButton, setShowMobileContactButton] = useState(false);
+  // Floating contact button tracking state:
+  // Shows with ArrowDown before the contact section, hides while viewing contact section,
+  // and reappears with ArrowUp once user scrolls past the contact section.
+  const [contactButtonState, setContactButtonState] = useState<{
+    visible: boolean;
+    direction: 'down' | 'up';
+  }>({
+    visible: false,
+    direction: 'down',
+  });
   const descriptionSectionRef = useRef<HTMLDivElement>(null);
   const contactCardRef = useRef<HTMLDivElement>(null);
 
@@ -163,7 +176,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
 
   // Social & Direct Share actions
   const getShareUrl = () => {
-    return window.location.href;
+    return `https://www.sandracarlos.pt${getPropertyPath(property.id)}`;
   };
 
   const handleShareWhatsApp = () => {
@@ -216,9 +229,14 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
     setIsShareMenuOpen((prev) => !prev);
   };
 
-  const { properties: allProperties } = useData();
-  // Other properties recommendation (exclude current)
-  const relatedProperties = (allProperties && allProperties.length > 0 ? allProperties : [property]).filter((p) => p.id !== property.id);
+  const { properties: allProperties, siteSettings } = useData();
+  const { config: siteConfig, photos: sitePhotos } = siteSettings;
+  const whatsappDigits = siteConfig.whatsappNumber.replace(/\D/g, '');
+
+  // Algoritmo de sugestão contextual de habitações por localização (Pombal / Leiria) e tipologia similar
+  const relatedProperties = React.useMemo(() => {
+    return getSimilarProperties(property, allProperties, 6);
+  }, [property, allProperties]);
 
   const nextHouse = () => {
     if (relatedProperties.length === 0) return;
@@ -235,39 +253,59 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
   const isCurrentFavorite = favorites.includes(property.id);
 
   // WhatsApp link with prefilled text
-  const whatsappUrl = `https://wa.me/351965881547?text=${encodeURIComponent(
-    `Olá Sandra Carlos, tenho interesse no imóvel "${property.title}" (${property.location}). Gostaria de receber mais informações e agendar uma visita.`
+  const whatsappUrl = `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
+    `Olá ${siteConfig.consultantName}, tenho interesse no imóvel "${property.title}" (${property.location}). Gostaria de receber mais informações e agendar uma visita.`
   )}`;
 
-  // Mobile Floating "Contactar a Sandra" button:
-  // Tracks user scroll from the start of the description down through the financial section,
-  // then hides once the user reaches the "Contacte-me" card directly.
+  // Floating "Contactar a Sandra" button:
+  // - Shows with ArrowDown before the contact section (mobile/tablet)
+  // - Hides while the user is actively viewing/interacting with the contact section
+  // - Reappears with ArrowUp as soon as the user passes below the contact section (virtual tour, similar properties, etc.)
   useEffect(() => {
     const handleScroll = () => {
-      // Only applicable on mobile / tablet screens (< 1024px)
-      if (window.innerWidth >= 1024) {
-        setShowMobileContactButton(false);
-        return;
-      }
-
       const descEl = descriptionSectionRef.current;
-      const contactEl = contactCardRef.current;
+      const contactEl = contactCardRef.current || document.getElementById('contacte-me-section');
 
       if (!descEl || !contactEl) return;
 
       const descRect = descEl.getBoundingClientRect();
       const contactRect = contactEl.getBoundingClientRect();
       const windowHeight = window.innerHeight;
+      const isMobile = window.innerWidth < 1024;
 
-      // Has scrolled down to start seeing the property description
+      // 1. O utilizador passou a área de contactos (o topo/fundo da secção já ultrapassou o ecrã)
+      const hasPassedContact = contactRect.bottom < 80;
+
+      // 2. A área de contactos está diretamente em visualização no ecrã
+      const isContactInView = contactRect.top <= windowHeight * 0.45 && contactRect.bottom >= 80;
+
+      // 3. O utilizador começou a ler o conteúdo detalhado do imóvel (área de descrição)
       const hasEnteredDescription = descRect.top <= windowHeight * 0.78;
-      // Has not yet reached the "Contacte-me" section card
-      const hasNotReachedContact = contactRect.top > windowHeight * 0.45;
 
-      if (hasEnteredDescription && hasNotReachedContact) {
-        setShowMobileContactButton(true);
+      if (hasPassedContact) {
+        // Assim que passar a área de contactos, volta a aparecer com a seta para cima para enviar para os contactos
+        setContactButtonState({
+          visible: true,
+          direction: 'up',
+        });
+      } else if (isContactInView) {
+        // Durante a visualização direta da área de contactos, oculta para não sobrepor
+        setContactButtonState({
+          visible: false,
+          direction: 'down',
+        });
+      } else if (hasEnteredDescription) {
+        // Antes da secção de contactos (no mobile), exibe com a seta para baixo
+        setContactButtonState({
+          visible: isMobile,
+          direction: 'down',
+        });
       } else {
-        setShowMobileContactButton(false);
+        // Acima do conteúdo (galeria topo)
+        setContactButtonState({
+          visible: false,
+          direction: 'down',
+        });
       }
     };
 
@@ -301,11 +339,11 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
         >
           {/* Main Hero Image with 3s sliding transition */}
           <AnimatePresence initial={false} custom={slideDirection}>
-            {/* Contexto: Fotografia principal de alta resolução no slider editorial do imóvel */}
+            {/* Contexto: Fotografia principal de alta resolução no slider editorial do imóvel com alt semântico */}
             <motion.img
               key={activeImageIndex}
               src={allImages[activeImageIndex]}
-              alt={`Sandra Carlos Consultoria Imobiliária - ${property.title} em ${property.location} - Fotografia ${activeImageIndex + 1} de ${allImages.length}`}
+              alt={getPropertyImageAlt(property, activeImageIndex, 'gallery')}
               custom={slideDirection}
               variants={heroSlideVariants}
               initial="enter"
@@ -317,6 +355,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
               }}
               className="absolute inset-0 w-full h-full object-cover cursor-pointer"
               loading="eager"
+              {...({ fetchPriority: 'high' } as any)}
               width={1600}
               height={1067}
               onClick={() => setIsGalleryOpen(true)}
@@ -384,6 +423,19 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
         {/* 2. SLEEK DARK SUMMARY BAR (Partilhar aligned with house price, heart button removed) */}
         <div className="relative z-30 w-full bg-[#422502] border-t border-b border-[#5c3403] text-white py-5 sm:py-6 px-6 sm:px-10 lg:px-16">
           <div className="max-w-7xl mx-auto flex flex-col gap-3.5">
+            {/* Breadcrumb navegável com links HTML nativos: Início > Imóveis > [Título do Imóvel] */}
+            <div className="border-b border-[#5c3403] pb-3 mb-1">
+              <Breadcrumb
+                items={[
+                  { name: 'Imóveis', page: 'imoveis' },
+                  { name: property.title },
+                ]}
+                onNavigate={onNavigate}
+                variant="dark"
+                className="px-0 py-0"
+              />
+            </div>
+
             {/* Title & Address */}
             <div>
               <h1 className="font-sans text-xl sm:text-2xl lg:text-3xl font-bold uppercase tracking-[0.12em] text-white">
@@ -621,9 +673,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
             {/* Destaques Arquitetónicos rápidos */}
             {property.architecturalHighlights && property.architecturalHighlights.length > 0 && (
               <div className="bg-[#FDF7F6] p-6 sm:p-8 border border-[#d8be9e]/50 shadow-xs">
-                <h4 className="font-sans text-xs uppercase tracking-[0.24em] text-[#422502] font-bold mb-4">
+                <h3 className="font-sans text-xs uppercase tracking-[0.24em] text-[#422502] font-bold mb-4">
                   DESTAQUES DA PROPRIEDADE
-                </h4>
+                </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {property.architecturalHighlights.map((highlight, idx) => (
                     <div key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-stone-800 font-sans">
@@ -742,8 +794,14 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
               <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden mb-5 border-2 border-[#D6920B]/60 shadow-lg">
                 {/* Contexto: Retrato da consultora Sandra Carlos na caixa de contacto do imóvel */}
                 <img
-                  src="https://SEU-DOMINIO-AQUI/sandra-carlos-consultora-imobiliaria-pombal.webp"
-                  alt="Sandra Carlos - Consultora Imobiliária em Pombal e Portugal"
+                  src={sitePhotos.sandraPortrait}
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.src.includes('/sandra.jpg')) {
+                      target.src = '/sandra.jpg';
+                    }
+                  }}
+                  alt={`${siteConfig.consultantName} - Consultora Imobiliária em Pombal e Portugal`}
                   className="w-full h-full object-cover object-[center_21%]"
                   loading="lazy"
                   width="128"
@@ -753,27 +811,28 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
 
               {/* Agent Information */}
               <h3 className="font-sans text-lg sm:text-xl font-bold uppercase tracking-[0.16em] text-white">
-                SANDRA CARLOS
+                {siteConfig.consultantName.toUpperCase()}
               </h3>
               <p className="font-sans text-xs text-[#d8be9e] font-normal tracking-wider mt-1 mb-6 max-w-xs">
-                Consultora Imobiliária Expertimo | Agente Pro
+                Consultora Imobiliária {siteConfig.partnerNetwork} | Agente Pro
               </p>
 
               {/* Contact Direct Links */}
               <div className="w-full border-t border-b border-[#5c3403] py-4 space-y-2.5 mb-6 text-xs sm:text-sm">
                 <a
-                  href="tel:+351965881547"
+                  href={`tel:+${whatsappDigits}`}
+                  onClick={() => trackPhoneCallClick('detalhe_imovel', property.title)}
                   className="flex items-center justify-center gap-2 text-stone-200 hover:text-[#D6920B] transition-colors"
                 >
                   <Phone size={14} className="text-[#D6920B]" />
-                  <span>+351 965 881 547</span>
+                  <span>{siteConfig.phoneDisplay}</span>
                 </a>
                 <a
-                  href="mailto:sandra.carlos@expertimo.eu"
+                  href={`mailto:${siteConfig.email}`}
                   className="flex items-center justify-center gap-2 text-stone-200 hover:text-[#D6920B] transition-colors break-all"
                 >
                   <Mail size={14} className="text-[#D6920B]" />
-                  <span>sandra.carlos@expertimo.eu</span>
+                  <span>{siteConfig.email}</span>
                 </a>
               </div>
 
@@ -783,6 +842,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackWhatsAppClick('detalhe_imovel', property.title)}
                   className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-4 bg-[#261501] hover:bg-[#381f02] text-white text-xs uppercase tracking-[0.16em] font-semibold transition-colors border border-[#D6920B]/60 hover:border-[#D6920B] cursor-pointer"
                 >
                   <MessageCircle size={15} className="text-emerald-400" />
@@ -838,7 +898,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
                   {/* Contexto: Imagem de capa do vídeo tour / apresentação imobiliária da propriedade */}
                   <img
                     src={property.videoThumbnail || property.secondaryImages?.[0] || property.image}
-                    alt={`Sandra Carlos Consultoria Imobiliária - Apresentação em Vídeo e Visita Virtual de ${property.title}`}
+                    alt={`Sandra Carlos Consultoria Imobiliária - Vídeo tour e apresentação de ${property.title} em ${property.location}`}
                     className="w-full h-full object-cover filter brightness-[0.75] transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"
                     width="1280"
@@ -927,13 +987,17 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
             >
               {relatedProperties.map((related, idx) => {
                 return (
-                  <motion.div
+                  <motion.a
                     key={related.id}
-                    onClick={() => {
-                      onSelectProperty(related);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    href={getPropertyPath(related.id)}
+                    onClick={(e) => {
+                      if (!e.metaKey && !e.ctrlKey) {
+                        e.preventDefault();
+                        onSelectProperty(related);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
                     }}
-                    className="group relative cursor-pointer overflow-hidden border border-[#5c3403] aspect-[4/5] sm:aspect-[4/5.2] flex flex-col justify-end p-6 sm:p-7 transition-all hover:border-[#D6920B] shrink-0 w-full md:w-[calc((100%-2rem*2)/3)]"
+                    className="group relative cursor-pointer overflow-hidden border border-[#5c3403] aspect-[4/5] sm:aspect-[4/5.2] flex flex-col justify-end p-6 sm:p-7 transition-all hover:border-[#D6920B] shrink-0 w-full md:w-[calc((100%-2rem*2)/3)] no-underline text-inherit"
                     whileHover={{ y: -4 }}
                     transition={{ duration: 0.2 }}
                   >
@@ -941,7 +1005,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
                     {/* Contexto: Cartão de imóvel similar / relacionado na parte inferior da ficha do imóvel */}
                     <img
                       src={related.image}
-                      alt={`Sandra Carlos Consultoria Imobiliária - ${related.title} em ${related.location}`}
+                      alt={getPropertyImageAlt(related, 0, 'related')}
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter brightness-[0.75] group-hover:brightness-[0.88]"
                       loading="lazy"
                       width="500"
@@ -978,7 +1042,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
                         <ChevronRight size={13} className="transition-transform group-hover:translate-x-1" />
                       </div>
                     </div>
-                  </motion.div>
+                  </motion.a>
                 );
               })}
             </motion.div>
@@ -1051,7 +1115,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
                   <motion.img
                     key={activeImageIndex}
                     src={allImages[activeImageIndex]}
-                    alt={`${property.title} - Foto ${activeImageIndex + 1}`}
+                    alt={getPropertyImageAlt(property, activeImageIndex, 'lightbox')}
                     custom={slideDirection}
                     variants={heroSlideVariants}
                     initial="enter"
@@ -1093,7 +1157,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
                   {/* Contexto: Miniatura navegável da galeria expandida do imóvel */}
                   <img
                     src={img}
-                    alt={`Miniatura ${idx + 1} de ${property.title}`}
+                    alt={`Miniatura ${idx + 1} de ${property.title} em ${property.location}`}
                     className="w-full h-full object-cover"
                     loading="lazy"
                     width="80"
@@ -1106,29 +1170,41 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
         )}
       </AnimatePresence>
 
-      {/* 8. MOBILE FLOATING "CONTACTAR A SANDRA" BUTTON */}
-      {/* Accompanies the user scroll through description until the financial section */}
-      {/* Clicking immediately scrolls directly to the "Contacte-me" section */}
+      {/* 8. FLOATING "CONTACTAR A SANDRA" BUTTON */}
+      {/* Antes dos contactos: leva para baixo até "Contacte-me" com ArrowDown */}
+      {/* Após passar a secção de contactos: volta a aparecer com ArrowUp para enviar para os contactos */}
       <AnimatePresence>
-        {showMobileContactButton && !isGalleryOpen && (
+        {contactButtonState.visible && !isGalleryOpen && (
           <motion.div
             initial={{ opacity: 0, y: 32, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.94 }}
             transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-            className="fixed bottom-5 inset-x-0 z-40 lg:hidden flex justify-center px-4 pointer-events-none"
+            className={`fixed bottom-5 inset-x-0 z-40 flex justify-center px-4 pointer-events-none ${
+              contactButtonState.direction === 'down' ? 'lg:hidden' : ''
+            }`}
           >
             <button
               onClick={scrollToContactMe}
               className="pointer-events-auto w-full max-w-sm bg-[#422502]/95 backdrop-blur-md text-white border border-[#D6920B]/70 shadow-[0_12px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(214,146,11,0.25)] rounded-full py-2.5 px-4 flex items-center justify-between gap-3 cursor-pointer active:scale-[0.98] hover:border-[#D6920B] transition-all group"
-              aria-label="Contactar a Sandra - Ir para Contacte-me"
+              aria-label={
+                contactButtonState.direction === 'up'
+                  ? 'Voltar para os Contactos'
+                  : 'Contactar a Sandra - Ir para Contacte-me'
+              }
             >
               {/* Sandra Photo with online indicator */}
               <div className="relative shrink-0">
                 <div className="w-10 h-10 rounded-full overflow-hidden border border-[#D6920B] shadow-sm">
-                  {/* Contexto: Miniatura de retrato da Sandra Carlos no botão flutuante mobile de contacto rápido */}
+                  {/* Contexto: Miniatura de retrato da Sandra Carlos no botão flutuante de contacto rápido */}
                   <img
-                    src="https://SEU-DOMINIO-AQUI/sandra-carlos-consultora-imobiliaria-pombal.webp"
+                    src="/sandra-carlos-consultora-imobiliaria-pombal.webp"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.src.includes('/sandra.jpg')) {
+                        target.src = '/sandra.jpg';
+                      }
+                    }}
                     alt="Sandra Carlos - Consultora Imobiliária"
                     className="w-full h-full object-cover object-[center_21%]"
                     loading="lazy"
@@ -1145,13 +1221,19 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
                   CONTACTAR A SANDRA
                 </p>
                 <p className="font-sans text-[10px] text-stone-300 tracking-wider truncate flex items-center gap-1 mt-0.5">
-                  <span className="text-[#D6920B] font-medium">Ir para Contacte-me</span>
+                  <span className="text-[#D6920B] font-medium">
+                    {contactButtonState.direction === 'up' ? 'Ir para Contacte-me' : 'Ir para Contacte-me'}
+                  </span>
                 </p>
               </div>
 
               {/* Action arrow badge */}
               <div className="shrink-0 w-8 h-8 rounded-full bg-[#261501] border border-[#D6920B]/60 flex items-center justify-center text-[#D6920B] group-hover:bg-[#381f02] group-hover:scale-105 transition-all shadow-inner">
-                <ArrowDown size={15} className="animate-bounce" />
+                {contactButtonState.direction === 'up' ? (
+                  <ArrowUp size={15} className="animate-bounce" />
+                ) : (
+                  <ArrowDown size={15} className="animate-bounce" />
+                )}
               </div>
             </button>
           </motion.div>

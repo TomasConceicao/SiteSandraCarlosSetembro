@@ -36,27 +36,35 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({ onNavigate }) => {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
-          <button
-            onClick={() => {
-              onNavigate('home');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+          <a
+            href="/"
+            onClick={(e) => {
+              if (!e.metaKey && !e.ctrlKey) {
+                e.preventDefault();
+                onNavigate('home');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
             }}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#321f12] text-white px-7 py-3 text-xs uppercase tracking-[0.2em] font-medium hover:bg-stone-900 transition-colors cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#321f12] text-white px-7 py-3 text-xs uppercase tracking-[0.2em] font-medium hover:bg-stone-900 transition-colors cursor-pointer no-underline"
           >
             <Home size={14} />
             PÁGINA INICIAL
-          </button>
+          </a>
 
-          <button
-            onClick={() => {
-              onNavigate('casas');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+          <a
+            href="/imoveis"
+            onClick={(e) => {
+              if (!e.metaKey && !e.ctrlKey) {
+                e.preventDefault();
+                onNavigate('imoveis');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
             }}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-stone-800 text-stone-900 px-7 py-3 text-xs uppercase tracking-[0.2em] font-medium hover:bg-stone-100 transition-colors cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-stone-800 text-stone-900 px-7 py-3 text-xs uppercase tracking-[0.2em] font-medium hover:bg-stone-100 transition-colors cursor-pointer no-underline"
           >
             <Compass size={14} />
             VER PORTFÓLIO
-          </button>
+          </a>
         </div>
       </motion.div>
     </div>

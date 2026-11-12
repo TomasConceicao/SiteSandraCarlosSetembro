@@ -1,8 +1,19 @@
+# Dependências e builds
 node_modules/
 build/
 dist/
 coverage/
+
+# Sistema operativo e logs
 .DS_Store
+Thumbs.db
 *.log
-.env*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Ficheiros de ambiente locais (nunca enviar credenciais para o Git)
+.env
+.env.*
 !.env.example
